@@ -15,7 +15,7 @@ The Edge shorthand is as follows:
 
 The script only has a few options:
 
-!deal-init [ --help ] [--reset ] [--show ]
+!deal-init [ --help ] [--reset ] [ --show ]
 (no args) Deals cards to turn order and sorts by suit.
 --help Displays the help.
 --reset Reset the deck and shuffle. Use at the start of a new scene or encounter.
