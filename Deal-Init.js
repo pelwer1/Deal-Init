@@ -2,6 +2,11 @@
 // By:       Pat Elwer
 // Contact:  https://app.roll20.net/users/8948/pat
 
+// ask Aaron
+// o How to avoid getAttrByName log errors when attribute doesn't exist
+
+
+
 // used by jslint tool:  http://www.jslint.com/
 /*jslint
    for, fudge, this, white
@@ -13,8 +18,8 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
-    var version = '0.2',
-        lastUpdate = '[Last Update: Aug 6, 2015, 10pm]',
+    var version = '0.3',
+        lastUpdate = '[Last Update: Aug 6, 2015, 11pm]',
         jokerLastRound = 0,
         deck      = {},
         hand      = {},
@@ -533,13 +538,7 @@ display = function(id) {
                 +'DealInit: Turn Order is Empty - Bailing Out! </div>'+  divEnd );
             return;
         } 
-        // else {
-            // for (i = 0; i < turnorder.length; i+=1) {
-            //     s += turnorder[i].id + ',' + turnorder[i].pr + ',' + turnorder[i].custom + "<p>";
-            // }
-            // sendChat('','/w '+who+' ' +divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-            //            +'DealInit: Current Turn Order </div>'+ s + divEnd );
-        // }
+
 
         var token_obj = {};
         var char_obj = {};
@@ -599,8 +598,14 @@ display = function(id) {
                 char_edges = "0"; 
                 if (char_obj !== "") {
                     // the get "current" value of InitEdges, if any
-                    char_edges = getAttrByName(char_obj.id, "InitEdges");
-                    if ( !char_edges ) { char_edges = "0";}  // turn marker gets here
+                    if ( !getAttrByName(char_obj.id, "InitEdges")) {
+                        char_edges = "0";
+                        sendChat('', '/w gm Character: '+ char_name+' does not have an InitEdges attribute!  Using 0.');
+                    }
+                    else {
+                        char_edges = getAttrByName(char_obj.id, "InitEdges");
+                    }                    
+                    // turn marker gets here
                     // sendChat('', 'looking for round in name: ' + char_name + ' index: ' + char_name.indexOf('Round'));
                     if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; }
         		}
