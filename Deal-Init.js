@@ -2,11 +2,6 @@
 // By:       Pat Elwer
 // Contact:  https://app.roll20.net/users/8948/pat
 
-// ask Aaron
-// o How to handle TurnMarker script's marker graphic - its not a custom item and not a token that represents a character
-
-
-
 // used by jslint tool:  http://www.jslint.com/
 /*jslint
    for, fudge, this, white
