@@ -21,7 +21,7 @@ The script only has a few options:
 --reset Reset the deck and shuffle. Use at the start of a new scene or encounter to start the deck fresh
 --show Show the current contents of the deck, discard pile, and turn order (hand).
 
-I personally use 2 macros to call the script that loook like this:
+I personally use 2 macros to call the script that look like this:
 "New Scene"
 !deal-init --reset
 !deal-init
