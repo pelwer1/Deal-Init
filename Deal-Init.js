@@ -1,10 +1,16 @@
-// Github:   url
+// Github:   https://github.com/pelwer1/Deal-Init
 // By:       Pat Elwer
 // Contact:  https://app.roll20.net/users/8948/pat
 
 // ask Aaron
-// o How to avoid getAttrByName log errors when attribute doesn't exist
+// o How to avoid getAttrByName log errors
 
+// on deck
+// configs to show/hide chat init edge output
+// once and only once in deal()
+
+//Rev History
+// 0.4 minimize chat output
 
 
 // used by jslint tool:  http://www.jslint.com/
@@ -18,9 +24,12 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
-    var version = '0.3',
+    var version = '0.4',
         lastUpdate = '[Last Update: Aug 6, 2015, 11pm]',
         jokerLastRound = 0,
+        showPCEdges = 1,
+        showNPCEdges = 1,
+        chatOutputLength = 4,
         deck      = {},
         hand      = {},
         discards  = {},
@@ -224,9 +233,10 @@ createDeck = function(id) {
   discards = new Stack();
 
   deck.makeDeck();
+
+  // var  who=getObj('player',id).get('_displayname').split(' ')[0];
+  // sendChat('','/w '+who+" Action Deck reset." );
   shuffle();
-  var  who=getObj('player',id).get('_displayname').split(' ')[0];
-  sendChat('','/w '+who+" Deck reset and shuffled." );
   jokerLastRound = 0;
 },
 
@@ -235,7 +245,7 @@ shuffle = function() {
   if (deck === null) { return; }
 
   deck.shuffle(1);
-
+  sendChat('','/em Action Deck shuffled.' );
 },
 
 
@@ -287,7 +297,6 @@ deal = function(id) {
   
   // build deck if needed
   if (!deck.cards) { 
-    sendChat('','/w '+who+" Deck not built - creating and shuffling deck." );
     createDeck(id);
     shuffle();
   }
@@ -297,7 +306,7 @@ deal = function(id) {
 
   // shuffle if deck is empty
   if (deck.cardCount() === 0 ) {
-    sendChat('','/em  Out of Cards - reshuffling discard pile.' );
+    sendChat('','/em Out of Action Cards - shuffling discards.' );
     deck.combine(discards);
     shuffle();
   }
@@ -328,7 +337,7 @@ deal = function(id) {
         else { 
             // sendChat('','/w '+who+" Deck Card Count: " + deck.cardCount() );
             if (deck.cardCount() === 0 ) {
-                sendChat('','/em Out of Action Cards - reshuffling discard pile.' );
+                sendChat('','/em Out of Action Cards - shuffling discards.' );
                 deck.combine(discards);
                 shuffle();
             }
@@ -349,7 +358,7 @@ deal = function(id) {
             // Level Headed
             if (initEdges[i].edges.indexOf('LH') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em Out of Cards - reshuffling discard pile.' );
+                    sendChat('','/em Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
@@ -357,7 +366,7 @@ deal = function(id) {
                 // draw a card
                 nextcard =  deck.deal();
 
-                sendChat('',sendto + '<u>'+initEdges[i].name+'</u> has <b>Level Headed edge</b>.  Cards are ' + turnorder[i].pr + ' and ' + nextcard.shortName );
+                sendChat('',sendto + '<u>'+initEdges[i].shortname+'...</u> <b>LH: </b>' + turnorder[i].pr + ', ' + nextcard.shortName );
 
                 if ( nextcard.cardRank > turnorder[i].rank ) {
                     turnorder[i].pr = nextcard.shortName;        
@@ -369,13 +378,13 @@ deal = function(id) {
             // Improved Level Headed
             if (initEdges[i].edges.indexOf('ILH') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em Out of Cards - reshuffling discard pile.' );
+                    sendChat('','/em Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
                 // draw a card
                 nextcard =  deck.deal();
-                sendChat('',sendto + '<u>'+initEdges[i].name+'</u> has <b>Improved Level Headed edge</b>.  Cards are ' + turnorder[i].pr + ' and ' + nextcard.shortName );
+                sendChat('',sendto + '<u>'+initEdges[i].shortname+'...</u> <b>ILH:  </b>' + turnorder[i].pr + ', ' + nextcard.shortName );
                 if ( nextcard.cardRank > turnorder[i].rank ) {
                     turnorder[i].pr = nextcard.shortName;        
                     turnorder[i].rank = nextcard.cardRank;        
@@ -388,13 +397,13 @@ deal = function(id) {
                 // loop until they have a 6 or better
                 while (turnorder[i].rank < 16 ) {
                     if (deck.cardCount() === 0 ) {
-                        sendChat('','/em Out of Cards - reshuffling discard pile.' );
+                        sendChat('','/em Out of Action Cards - shuffling discards.' );
                         deck.combine(discards);
                         shuffle();
                     }
                     // draw a card
                     nextcard =  deck.deal();
-                    sendChat('',sendto + '<u>'+initEdges[i].name+'</u> has <b>Quick edge</b>.  Cards are ' + turnorder[i].pr + ' and ' + nextcard.shortName );
+                    sendChat('',sendto + '<u>'+initEdges[i].shortname+'</u> <b>Quick: </b>' + turnorder[i].pr + ', ' + nextcard.shortName );
                     if ( nextcard.cardRank > turnorder[i].rank ) {
                         turnorder[i].pr = nextcard.shortName;        
                         turnorder[i].rank = nextcard.cardRank;        
@@ -410,7 +419,7 @@ deal = function(id) {
             if (initEdges[i].edges.indexOf('WCE') !== -1 ) {
                 // send message to chat regarding wild card edge activation  - should only send this to the "controlled by" list
                 sendChat('', sendto + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-                    +initEdges[i].name+'</div>You have a Joker!  Your <b>Wild Card edge</b> activates!'+ divEnd );
+                    +initEdges[i].name+'</div>Your Joker activates your <b>Wild Card edge!</b>'+ divEnd );
             }
         }
     } // end for i ....
@@ -552,7 +561,7 @@ display = function(id) {
 
             // if the turn order item is a "custom item", mark it as a skip for dealing init
             if ( toid === "-1") { 
-                initEdges[i] = { id : toid, edges : "SKIP", name: turnorder[i].custom, toktype:"npc" };
+                initEdges[i] = { id : toid, edges : "SKIP", name: turnorder[i].custom, toktype:"npc", shortname: turnorder[i].custom.substr(0, chatOutputLength) };
                 
             }
             // if the turn order item is a "token that doesn't represent a character", set InitEdges to 0
@@ -571,7 +580,7 @@ display = function(id) {
                 char_name = getObj("graphic", toid).get("name"); 
                 // handle the turn marder token
                 if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; } else {char_edges = "0";}
-                initEdges[i] = { id: toid, edges : char_edges, name: char_name , toktype: tokentype  };
+                initEdges[i] = { id: toid, edges : char_edges, name: char_name , toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)   };
               
                 // sendChat('','Player type : '+tokentype+ '<br>Name: '+ initEdges[i].name);
             }
@@ -600,7 +609,7 @@ display = function(id) {
                     // the get "current" value of InitEdges, if any
                     if ( !getAttrByName(char_obj.id, "InitEdges")) {
                         char_edges = "0";
-                        sendChat('', '/w gm Character: '+ char_name+' does not have an InitEdges attribute!  Using 0.');
+                        sendChat('', '/w gm No Init Edges for: '+ char_name);
                     }
                     else {
                         char_edges = getAttrByName(char_obj.id, "InitEdges");
@@ -609,12 +618,12 @@ display = function(id) {
                     // sendChat('', 'looking for round in name: ' + char_name + ' index: ' + char_name.indexOf('Round'));
                     if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; }
         		}
-                initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype  };
+                initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
                 
             }
             else {
                 // turn marker script uses a token in turn order that doesn't follow the rules, I initialize the obj to make it safe
-                initEdges[i] = { id : toid, edges : "SKIP", name: "unknown",  toktype:"npc" };
+                initEdges[i] = { id : toid, edges : "SKIP", name: "unknown",  toktype:"npc", shortname: "unknown" };
             }
             // sendChat('','/w '+who+' ' +divStart + 'DealInit: Character <p>Name: '+ initEdges[i].name  + '<p>Edges: '+ initEdges[i].edges+ '<p>ID: '+ initEdges[i].id + '<p>Token Type: '+ initEdges[i].toktype + divEnd );
         }  // next i
