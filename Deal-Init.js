@@ -11,6 +11,7 @@
 
 //Rev History
 // 0.4 minimize chat output
+// 0.5 fancy card symbols - thanks Aaron!
 
 
 // used by jslint tool:  http://www.jslint.com/
@@ -24,8 +25,8 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
-    var version = '0.4',
-        lastUpdate = '[Last Update: Aug 6, 2015, 11pm]',
+    var version = '0.5',
+        lastUpdate = '[Last Update: Aug 15, 2015, 11am]',
         jokerLastRound = 0,
         showPCEdges = 1,
         showNPCEdges = 1,
@@ -85,61 +86,62 @@ stackMakeDeck = function() {
     this.cards = [];
 
     // fill card deck array with cards: cardRank, shortName,longName)
-    this.cards[0]  = new Card( 0,"2C","2 of Clubs" );
-    this.cards[1]  = new Card( 1,"2D","2 of Diamonds" );
-    this.cards[2]  = new Card( 2,"2H","2 of Hearts" );
-    this.cards[3]  = new Card( 3,"2S","2 of Spades" );
-    this.cards[4]  = new Card( 4,"3C","3 of Clubs" );
-    this.cards[5]  = new Card( 5,"3D","3 of Diamonds" );
-    this.cards[6]  = new Card( 6,"3H","3 of Hearts" );
-    this.cards[7]  = new Card( 7,"3S","3 of Spades" );
-    this.cards[8]  = new Card( 8,"4C","4 of Clubs" );
-    this.cards[9]  = new Card( 9,"4D","4 of Diamonds" );
-    this.cards[10] = new Card(10,"4H","4 of Hearts" );
-    this.cards[11] = new Card(11,"4S","4 of Spades" );
-    this.cards[12] = new Card(12,"5C","5 of Clubs" );
-    this.cards[13] = new Card(13,"5D","5 of Diamonds" );
-    this.cards[14] = new Card(14,"5H","5 of Hearts" );
-    this.cards[15] = new Card(15,"5S","5 of Spades" );
-    this.cards[16] = new Card(16,"6C","6 of Clubs" );
-    this.cards[17] = new Card(17,"6D","6 of Diamonds" );
-    this.cards[18] = new Card(18,"6H","6 of Hearts" );
-    this.cards[19] = new Card(19,"6S","6 of Spades" );
-    this.cards[20] = new Card(20,"7C","7 of Clubs" );
-    this.cards[21] = new Card(21,"7D","7 of Diamonds" );
-    this.cards[22] = new Card(22,"7H","7 of Hearts" );
-    this.cards[23] = new Card(23,"7S","7 of Spades" );
-    this.cards[24] = new Card(24,"8C","8 of Clubs" );
-    this.cards[25] = new Card(25,"8D","8 of Diamonds" );
-    this.cards[26] = new Card(26,"8H","8 of Hearts" );
-    this.cards[27] = new Card(27,"8S","8 of Spades" );
-    this.cards[28] = new Card(28,"9C","9 of Clubs" );
-    this.cards[29] = new Card(29,"9D","9 of Diamonds" );
-    this.cards[30] = new Card(30,"9H","9 of Hearts" );
-    this.cards[31] = new Card(31,"9S","9 of Spades" );
-    this.cards[32] = new Card(32,"10C","10 of Clubs" );
-    this.cards[33] = new Card(33,"10D","10 of Diamonds" );
-    this.cards[34] = new Card(34,"10H","10 of Hearts" );
-    this.cards[35] = new Card(35,"10S","10 of Spades" );
-    this.cards[36] = new Card(36,"JC","Jack of Clubs" );
-    this.cards[37] = new Card(37,"JD","Jack of Diamonds" );
-    this.cards[38] = new Card(38,"JH","Jack of Hearts" );
-    this.cards[39] = new Card(39,"JS","Jack of Spades" );
-    this.cards[40] = new Card(40,"QC","Queen of Clubs" );
-    this.cards[41] = new Card(41,"QD","Queen of Diamonds" );
-    this.cards[42] = new Card(42,"QH","Queen of Hearts" );
-    this.cards[43] = new Card(43,"QS","Queen of Spades" );
-    this.cards[44] = new Card(44,"KC","King of Clubs" );
-    this.cards[45] = new Card(45,"KD","King of Diamonds" );
-    this.cards[46] = new Card(46,"KH","King of Hearts" );
-    this.cards[47] = new Card(47,"KS","King of Spades" );
-    this.cards[48] = new Card(48,"AC","Ace of Clubs" );
-    this.cards[49] = new Card(49,"AD","Ace of Diamonds" );
-    this.cards[50] = new Card(50,"AH","Ace of Hearts" );
-    this.cards[51] = new Card(51,"AS","Ace of Spades" );
+    // this.cards[0]  = new Card( 0, "2C,"2 of Clubs" );
+    this.cards[0]  = new Card( 0,"2&"+"clubs;","2 of Clubs" );
+    this.cards[1]  = new Card( 1,"2&"+"diams;","2 of Diamonds" );
+    this.cards[2]  = new Card( 2,"2&"+"hearts;","2 of Hearts" );
+    this.cards[3]  = new Card( 3,"2&"+"spades;","2 of Spades" );
+    this.cards[4]  = new Card( 4,"3&"+"clubs;","3 of Clubs" );
+    this.cards[5]  = new Card( 5,"3&"+"diams;","3 of Diamonds" );
+    this.cards[6]  = new Card( 6,"3&"+"hearts;","3 of Hearts" );
+    this.cards[7]  = new Card( 7,"3&"+"spades;","3 of Spades" );
+    this.cards[8]  = new Card( 8,"4&"+"clubs;","4 of Clubs" );
+    this.cards[9]  = new Card( 9,"4&"+"diams;","4 of Diamonds" );
+    this.cards[10] = new Card(10,"4&"+"hearts;","4 of Hearts" );
+    this.cards[11] = new Card(11,"4&"+"spades;","4 of Spades" );
+    this.cards[12] = new Card(12,"5&"+"clubs;","5 of Clubs" );
+    this.cards[13] = new Card(13,"5&"+"diams;","5 of Diamonds" );
+    this.cards[14] = new Card(14,"5&"+"hearts;","5 of Hearts" );
+    this.cards[15] = new Card(15,"5&"+"spades;","5 of Spades" );
+    this.cards[16] = new Card(16,"6&"+"clubs;","6 of Clubs" );
+    this.cards[17] = new Card(17,"6&"+"diams;","6 of Diamonds" );
+    this.cards[18] = new Card(18,"6&"+"hearts;","6 of Hearts" );
+    this.cards[19] = new Card(19,"6&"+"spades;","6 of Spades" );
+    this.cards[20] = new Card(20,"7&"+"clubs;","7 of Clubs" );
+    this.cards[21] = new Card(21,"7&"+"diams;","7 of Diamonds" );
+    this.cards[22] = new Card(22,"7&"+"hearts;","7 of Hearts" );
+    this.cards[23] = new Card(23,"7&"+"spades;","7 of Spades" );
+    this.cards[24] = new Card(24,"8&"+"clubs;","8 of Clubs" );
+    this.cards[25] = new Card(25,"8&"+"diams;","8 of Diamonds" );
+    this.cards[26] = new Card(26,"8&"+"hearts;","8 of Hearts" );
+    this.cards[27] = new Card(27,"8&"+"spades;","8 of Spades" );
+    this.cards[28] = new Card(28,"9&"+"clubs;","9 of Clubs" );
+    this.cards[29] = new Card(29,"9&"+"diams;","9 of Diamonds" );
+    this.cards[30] = new Card(30,"9&"+"hearts;","9 of Hearts" );
+    this.cards[31] = new Card(31,"9&"+"spades;","9 of Spades" );
+    this.cards[32] = new Card(32,"10&"+"clubs;","10 of Clubs" );
+    this.cards[33] = new Card(33,"10&"+"diams;","10 of Diamonds" );
+    this.cards[34] = new Card(34,"10&"+"hearts;","10 of Hearts" );
+    this.cards[35] = new Card(35,"10&"+"spades;","10 of Spades" );
+    this.cards[36] = new Card(36,"J&"+"clubs;","Jack of Clubs" );
+    this.cards[37] = new Card(37,"J&"+"diams;","Jack of Diamonds" );
+    this.cards[38] = new Card(38,"J&"+"hearts;","Jack of Hearts" );
+    this.cards[39] = new Card(39,"J&"+"spades;","Jack of Spades" );
+    this.cards[40] = new Card(40,"Q&"+"clubs;","Queen of Clubs" );
+    this.cards[41] = new Card(41,"Q&"+"diams;","Queen of Diamonds" );
+    this.cards[42] = new Card(42,"Q&"+"hearts;","Queen of Hearts" );
+    this.cards[43] = new Card(43,"Q&"+"spades;","Queen of Spades" );
+    this.cards[44] = new Card(44,"K&"+"clubs;","King of Clubs" );
+    this.cards[45] = new Card(45,"K&"+"diams;","King of Diamonds" );
+    this.cards[46] = new Card(46,"K&"+"hearts;","King of Hearts" );
+    this.cards[47] = new Card(47,"K&"+"spades;","King of Spades" );
+    this.cards[48] = new Card(48,"A&"+"clubs;","Ace of Clubs" );
+    this.cards[49] = new Card(49,"A&"+"diams;","Ace of Diamonds" );
+    this.cards[50] = new Card(50,"A&"+"hearts;","Ace of Hearts" );
+    this.cards[51] = new Card(51,"A&"+"spades;","Ace of Spades" );
     this.cards[52] = new Card(52,"BJo","Black Joker" );
     this.cards[53] = new Card(53,"RJo","Red Joker" );
-
+    
 },
 
 //-----------------------------------------------------------------------------
