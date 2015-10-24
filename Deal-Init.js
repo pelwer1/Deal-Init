@@ -14,7 +14,8 @@
 //Rev History
 // 0.4 minimize chat output
 // 0.5 fancy card symbols - thanks Aaron!
-// 0.6 skipping tokens that are still On Hold a the end of the round - thanks GV!
+// 0.6 now skipping tokens that are still On Hold a the end of the round - thanks GV!
+//     stopped setting init value of Round counters to -1 - thanks GV!
 
 
 // used by jslint tool:  http://www.jslint.com/
@@ -28,11 +29,9 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
-    var version = '0.5',
-        lastUpdate = '[Last Update: Aug 15, 2015, 11am]',
+    var version = '0.6',
+        lastUpdate = '[Last Update: Oct 25, 2015, 11am]',
         jokerLastRound = 0,
-        showPCEdges = 1,
-        showNPCEdges = 1,
         chatOutputLength = 4,
         deck      = {},
         hand      = {},
@@ -204,7 +203,6 @@ stackDraw = function(n) {
 //-----------------------------------------------------------------------------
 // stackAdd(card): Adds the given card to the stack.
 //-----------------------------------------------------------------------------
-
 stackAddCard = function(card) {
 
   this.cards.push(card);
@@ -224,13 +222,15 @@ stackCombine = function(stack) {
 //-----------------------------------------------------------------------------
 // stackCardCount(): Returns the number of cards currently in the stack.
 //-----------------------------------------------------------------------------
-
 stackCardCount = function() {
 
   return this.cards.length;
 },
 
 
+//-----------------------------------------------------------------------------
+// createDeck(): creates and shuffles init deck.  Use at start of scene.
+//-----------------------------------------------------------------------------
 createDeck = function(id) {
 
   deck     = new Stack();
@@ -245,6 +245,9 @@ createDeck = function(id) {
   jokerLastRound = 0;
 },
 
+//-----------------------------------------------------------------------------
+// shuffle(): Returns shuffled deck
+//-----------------------------------------------------------------------------
 shuffle = function() {
 
   if (deck === null) { return; }
@@ -293,6 +296,233 @@ shuffle = function() {
         //  this.shortName = shortName; // short name for display in turn order e.g. JH 
         //  this.longName = longName;   // long name for human readable messages e.g Jack of Hearts
   
+  
+
+//-----------------------------------------------------------------------------
+// discard(): moves cards in turn order into the discard pile in preparation for dealing
+//-----------------------------------------------------------------------------
+discard = function() {
+
+  if (!hand.cards) {return;}
+
+  discards.combine(hand);
+
+},
+
+//-----------------------------------------------------------------------------
+// reset(): Moves all cards back into the deck in preparation for shuffle
+//-----------------------------------------------------------------------------
+reset = function() {
+
+  if (!discards.cards) {return;}
+
+  discards.combine(hand);
+  deck.combine(discards);
+
+},
+
+//-----------------------------------------------------------------------------
+// display(): sends contents of deck, hand, discard piles to chat
+//-----------------------------------------------------------------------------
+display = function(id) {
+
+  var s, i;
+    var  who=getObj('player',id).get('_displayname').split(' ')[0];
+     
+
+  if (!deck.cards) {
+      sendChat('','/w '+who+'  Deck not built!  Run: !deal-init --reset');
+      return;
+      
+  } 
+  
+  s = "";
+  for (i = 0; i < deck.cardCount(); i+=1) {
+    s += deck.cards[i].cardRank + ',' + deck.cards[i].shortName + ',' + deck.cards[i].longName + "<p>";
+  }
+  sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+		+'DealInit: Deck Cards</div>'+ s + divEnd );
+
+  s = "";
+  for (i = 0; i < hand.cardCount(); i+=1) {
+    s += hand.cards[i].cardRank + ',' + hand.cards[i].shortName + ',' + hand.cards[i].longName + "<p>";
+  }
+  sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+    	+'DealInit: Turn Order</div>'+ s + divEnd );
+
+  s = "";
+  for (i = 0; i < discards.cardCount(); i+=1) {
+    s += discards.cards[i].cardRank + ',' + discards.cards[i].shortName + ',' + discards.cards[i].longName + "<p>";
+  }
+  sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+    	+'DealInit: Discards</div>'+ s + divEnd );
+},
+
+// See code from turn marker - create object called TurnOrder with methods
+
+
+// turn order data structure from API guide
+// [
+//     {
+//      "id":"36CA8D77-CF43-48D1-8682-FA2F5DFD495F", //The ID of the Graphic object. If this is set, the turn order list will automatically pull the name and icon for the list based on the graphic on the tabletop.
+//      "pr":"0", //The current value for the item in the list. Can be a number or text.
+//      "custom":"" //Custom title for the item. Will be ignored if ID is set to a value other than "-1".
+//     },
+//     {
+//      "id":"-1", //For custom items, the ID MUST be set to "-1" (note that this is a STRING not a NUMBER.
+//      "pr":"12",
+//      "custom":"Test Custom" //The name to be displayed for custom items.
+//     }
+// ]
+
+//-----------------------------------------------------------------------------
+// getTurnOrder(): Read Turn Order and load into a hash
+//-----------------------------------------------------------------------------
+// To work with the turn order, you will want to use JSON.parse() to get an object representing the 
+// current turn order state (NOTE: Check to make sure it's not an empty string "" first...if it is, 
+// initialize it yourself with an empty array).
+getTurnOrder = function() {
+	var to=Campaign().get("turnorder");
+	to=(''===to ? '[]' : to); 
+    return JSON.parse(to);
+},
+
+
+//-----------------------------------------------------------------------------
+// getInitiativeEdges(): Read Init Edges from characters (if any) and store in hash
+//-----------------------------------------------------------------------------
+// To modify the turn order, edit the current turn order object and then use 
+// JSON.stringify() to change the attribute on the Campaign. Note that the 
+// ordering for the turn order in the list is the same as the order of the array, 
+// so for example push() adds an item onto the end of the list, unshift() adds to the beginning, etc.
+//
+// initEdges :
+// [
+//     {  // token that represents a character
+//      "id":"36CA8D77-CF43-48D1-8682-FA2F5DFD495F", //The ID of the Graphic object. If this is set, the turn order list will automatically pull the name and icon for the list based on the graphic on the tabletop.
+//      "edges":"LH,Qu", // or "0" The current value for the item in the list. Can be a number or text.
+//      "name":"Prospero" //Custom title for the item. Will be ignored if ID is set to a value other than "-1".
+//      "toktype": "pc // Token Type "pc" or "npc", used to control who see which messages
+//     },
+//     {   // custom item
+//      "id":"-1", //For custom items, the ID MUST be set to "-1" (note that this is a STRING not a NUMBER.
+//      "edges":"SKIP",  // set edges skip to not deal it a card
+//      "name":"Custom Name" //The name to be displayed for custom items.
+//      "toktype": "npc // Token Type "pc" or "npc"
+//     }
+//     {   // token that doesn't represent a character
+//      "id":"36CA8D77-CF43-48D1-8682-FA2F5DFD495F", //The ID of the Graphic object.
+//      "edges":"0",  // set edges 0 - one card only
+//      "name":"Token name" //The name to be displayed for custom items.
+//      "toktype": "npc // Token Type "pc" or "npc"
+//     }
+// ]
+getInitiativeEdges = function (id) {
+
+    var char_edges = "";
+    var char_name = "";
+    var turnorder = getTurnOrder();
+    var i;
+    var s = "";
+    var  who=getObj('player',id).get('_displayname').split(' ')[0];
+    if (!turnorder.length) {
+        sendChat('','/w '+who+' ' +divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
+            +'DealInit: Turn Order is Empty - Bailing Out! </div>'+  divEnd );
+        return;
+    } 
+
+
+    var token_obj = {};
+    var char_obj = {};
+    var toid, controler, tokenOnHold, tokentype;
+
+    // get associated character from each token in turn order
+    for (i = 0; i < turnorder.length; i+=1) {
+         // sendChat('',divStart + 'DealInit: TO ID: '+ turnorder[i].id + divEnd );
+         toid = turnorder[i].id;
+			tokenOnHold = 0;
+         if ( turnorder[i].pr === "H" || turnorder[i].pr === "h" ) {
+         	tokenOnHold = 1;
+         	char_name = getObj("graphic", toid).get("name");
+         	sendChat('','/w gm ' +char_name+ ' is On Hold this round!')
+         }
+
+        // if the turn order item is a "custom item", mark it as a skip for dealing init
+        if ( toid === "-1") { 
+            initEdges[i] = { id : toid, edges : "SKIP", name: turnorder[i].custom, toktype:"npc", shortname: turnorder[i].custom.substr(0, chatOutputLength) };
+            
+        }
+        // if the turn order item is a "token that doesn't represent a character", set InitEdges to 0
+        else if (!getObj("character", getObj("graphic", toid).get("represents")) ) {
+            // from the graphic id, get the token object
+            token_obj  = getObj("graphic", toid);
+            // determine who controls the token
+            controler  =  token_obj.get("controlledby");
+            if (controler === '' || playerIsGM(controler) ){
+                tokentype = 'npc';
+            }
+            else {
+                tokentype = 'pc';                    
+            }
+            
+            char_name = getObj("graphic", toid).get("name"); 
+            // handle the turn marker token
+            if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; } else if (tokenOnHold === 1) { char_edges = "HOLD"; } else {char_edges = "0";}
+            initEdges[i] = { id: toid, edges : char_edges, name: char_name , toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)   };
+          
+            // sendChat('','Player type : '+tokentype+ '<br>Name: '+ initEdges[i].name);
+        }
+        // turn order item is a "token that represents a character", look for init edges 
+        else if ( getObj("character", getObj("graphic", toid).get("represents")) ) {
+            
+            
+            // from the graphic id, get the token object
+            token_obj = getObj("graphic", toid);
+            // determine who controls the token
+            controler  =  token_obj.get("controlledby");
+            // sendChat('','controlled by: '+controler);
+            if (controler === '' || playerIsGM(controler) ){
+                tokentype = 'npc';
+            }
+            else {
+                tokentype = 'pc';                    
+            }
+            // from the token object, get the character that it reperesents
+            char_obj    = getObj("character", token_obj.get("represents"));
+            // get the name of the character
+            char_name  = char_obj.get("name"); 
+           
+            char_edges = "0"; 
+            if (char_obj !== "") {
+                // the get "current" value of InitEdges, if any
+                if ( !getAttrByName(char_obj.id, "InitEdges")) {
+                    char_edges = "0";
+                    sendChat('', '/w gm No Init Edges for: '+ char_name);
+                }
+                else {
+                    char_edges = getAttrByName(char_obj.id, "InitEdges");
+                }                    
+                // turn marker gets here
+                // sendChat('', 'looking for round in name: ' + char_name + ' index: ' + char_name.indexOf('Round'));
+                if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; } 
+                if (tokenOnHold === 1) { char_edges = "HOLD"; } 
+    		}
+            initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
+            
+        }
+        else {
+            // if some script uses a token in turn order that doesn't follow the rules, I initialize the obj to make it safe
+            initEdges[i] = { id : toid, edges : "SKIP", name: "unknown",  toktype:"npc", shortname: "unknown" };
+        }
+        // sendChat('','/w '+who+' ' +divStart + 'DealInit: Character <p>Name: '+ initEdges[i].name  + '<p>Edges: '+ initEdges[i].edges+ '<p>ID: '+ initEdges[i].id + '<p>Token Type: '+ initEdges[i].toktype + divEnd );
+    }  // next i
+    // log(initEdges);
+
+},
+
+//-----------------------------------------------------------------------------
+// deal(): Deals cards to turn order items and sorts
+//-----------------------------------------------------------------------------
 deal = function(id) {
 
   var i;
@@ -316,7 +546,7 @@ deal = function(id) {
     shuffle();
   }
 
-  // shuffle if there was a joker lat round
+  // shuffle if there was a joker last round
   if (jokerLastRound === 1 ) {
     sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
             +'Joker Last Round!'+'</div>Reshuffling discard pile...'+ divEnd );
@@ -325,8 +555,7 @@ deal = function(id) {
     shuffle();
     jokerLastRound = 0;
   }
-    // deal
-    // handle init edges
+    // deal and handle init edges
     var nextcard = {};
     for (i = 0; i < turnorder.length; i+=1) {
         sendto = "/em "; // send messages to everyone by default
@@ -335,10 +564,14 @@ deal = function(id) {
         // put it in turn order if getting a card
         // turn order and initEdges are in the same array order - counting on this!
         if (initEdges[i].edges === "SKIP" ) {
-            turnorder[i].pr   = "-1";
             turnorder[i].rank = "-1";
             
         }
+		  // give tokens On Hold the highest rank
+        else if (initEdges[i].edges === "HOLD" ) {
+            turnorder[i].rank = "55";            
+        }
+        
         else { 
             // sendChat('','/w '+who+" Deck Card Count: " + deck.cardCount() );
             if (deck.cardCount() === 0 ) {
@@ -397,7 +630,7 @@ deal = function(id) {
                 // store it in hand
                 hand.addCard(nextcard); 
             } // end Improved Level Headed
-            // quick
+            // Quick
             if (initEdges[i].edges.indexOf('Qui') !== -1 ) {
                 // loop until they have a 6 or better
                 while (turnorder[i].rank < 16 ) {
@@ -435,228 +668,31 @@ deal = function(id) {
     Campaign().set("turnorder", JSON.stringify(sortedturnorder));
 },  // end deal
 
-discard = function() {
 
-  if (!hand.cards) {return;}
-
-  discards.combine(hand);
-
+//-----------------------------------------------------------------------------
+// dealInitiative(): load turn order with the deal
+//-----------------------------------------------------------------------------
+// every time we deal, we need to
+// o pull turn order tokens
+// o get names, ids, and init edges  
+// o deal cards to hand, accounting for init edges and end of deck and jokers
+// o no cards to custom items in init - set to -1 init to put them at the bottom
+// o on recall and shuffle, don't destroy hand unless new scene/combat (createDeck)
+// o sort the hand high to low
+// o write the hand to turn order
+dealInitiative =function(id) {
+    // log('-=> DealInit: Calling [getInitiativeEdges] function <=- ');
+     // pulls turn order tokens and fills initEdges object with names,ids,edges
+    getInitiativeEdges(id);
+    // log('-=> DealInit: back from [getInitiativeEdges] function <=- ');
+    deal(id);
 },
 
-reset = function() {
 
-  if (!discards.cards) {return;}
-
-  discards.combine(hand);
-  deck.combine(discards);
-
-},
-
-display = function(id) {
-
-  var s, i;
-    var  who=getObj('player',id).get('_displayname').split(' ')[0];
-     
-
-  if (!deck.cards) {
-      sendChat('','/w '+who+'  Deck not built!  Run: !deal-init --reset');
-      return;
-      
-  } 
-  
-  s = "";
-  for (i = 0; i < deck.cardCount(); i+=1) {
-    s += deck.cards[i].cardRank + ',' + deck.cards[i].shortName + ',' + deck.cards[i].longName + "<p>";
-  }
-  sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-		+'DealInit: Deck Cards</div>'+ s + divEnd );
-
-  s = "";
-  for (i = 0; i < hand.cardCount(); i+=1) {
-    s += hand.cards[i].cardRank + ',' + hand.cards[i].shortName + ',' + hand.cards[i].longName + "<p>";
-  }
-  sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-    	+'DealInit: Turn Order</div>'+ s + divEnd );
-
-  s = "";
-  for (i = 0; i < discards.cardCount(); i+=1) {
-    s += discards.cards[i].cardRank + ',' + discards.cards[i].shortName + ',' + discards.cards[i].longName + "<p>";
-  }
-  sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-    	+'DealInit: Discards</div>'+ s + divEnd );
-},
-
-// See code from turn marker - create object called TurnOrder with methods
-
-
-// turn order data structure from API guide
-// [
-//     {
-//      "id":"36CA8D77-CF43-48D1-8682-FA2F5DFD495F", //The ID of the Graphic object. If this is set, the turn order list will automatically pull the name and icon for the list based on the graphic on the tabletop.
-//      "pr":"0", //The current value for the item in the list. Can be a number or text.
-//      "custom":"" //Custom title for the item. Will be ignored if ID is set to a value other than "-1".
-//     },
-//     {
-//      "id":"-1", //For custom items, the ID MUST be set to "-1" (note that this is a STRING not a NUMBER.
-//      "pr":"12",
-//      "custom":"Test Custom" //The name to be displayed for custom items.
-//     }
-// ]
-
-        // To work with the turn order, you will want to use JSON.parse() to get an object representing the 
-        // current turn order state (NOTE: Check to make sure it's not an empty string "" first...if it is, 
-        // initialize it yourself with an empty array).
-    getTurnOrder = function() {
-    	var to=Campaign().get("turnorder");
-		to=(''===to ? '[]' : to); 
-        return JSON.parse(to);
-    },
-
-
-        // To modify the turn order, edit the current turn order object and then use 
-        // JSON.stringify() to change the attribute on the Campaign. Note that the 
-        // ordering for the turn order in the list is the same as the order of the array, 
-        // so for example push() adds an item onto the end of the list, unshift() adds to the beginning, etc.
-        //
-        // initEdges :
-        // [
-        //     {  // token that represents a character
-        //      "id":"36CA8D77-CF43-48D1-8682-FA2F5DFD495F", //The ID of the Graphic object. If this is set, the turn order list will automatically pull the name and icon for the list based on the graphic on the tabletop.
-        //      "edges":"LH,Qu", // or "0" The current value for the item in the list. Can be a number or text.
-        //      "name":"Prospero" //Custom title for the item. Will be ignored if ID is set to a value other than "-1".
-        //      "toktype": "pc // Token Type "pc" or "npc", used to control who see which messages
-        //     },
-        //     {   // custom item
-        //      "id":"-1", //For custom items, the ID MUST be set to "-1" (note that this is a STRING not a NUMBER.
-        //      "edges":"SKIP",  // set edges skip to not deal it a card
-        //      "name":"Custom Name" //The name to be displayed for custom items.
-        //      "toktype": "npc // Token Type "pc" or "npc"
-        //     }
-        //     {   // token that doesn't represent a character
-        //      "id":"36CA8D77-CF43-48D1-8682-FA2F5DFD495F", //The ID of the Graphic object.
-        //      "edges":"0",  // set edges 0 - one card only
-        //      "name":"Token name" //The name to be displayed for custom items.
-        //      "toktype": "npc // Token Type "pc" or "npc"
-        //     }
-        // ]
-    getInitiativeEdges = function (id) {
-    
-        var char_edges = "";
-        var char_name = "";
-        var turnorder = getTurnOrder();
-        var i;
-        var s = "";
-        var  who=getObj('player',id).get('_displayname').split(' ')[0];
-        if (!turnorder.length) {
-            sendChat('','/w '+who+' ' +divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-                +'DealInit: Turn Order is Empty - Bailing Out! </div>'+  divEnd );
-            return;
-        } 
-
-
-        var token_obj = {};
-        var char_obj = {};
-        var toid, controler, tokentype;
-
-        // get associated character from each token in turn order
-        for (i = 0; i < turnorder.length; i+=1) {
-             // sendChat('',divStart + 'DealInit: TO ID: '+ turnorder[i].id + divEnd );
-             toid = turnorder[i].id;
-            
-
-            // if the turn order item is a "custom item", mark it as a skip for dealing init
-            if ( toid === "-1") { 
-                initEdges[i] = { id : toid, edges : "SKIP", name: turnorder[i].custom, toktype:"npc", shortname: turnorder[i].custom.substr(0, chatOutputLength) };
-                
-            }
-            // if the turn order item is a "token that doesn't represent a character", set InitEdges to 0
-            else if (!getObj("character", getObj("graphic", toid).get("represents")) ) {
-                // from the graphic id, get the token object
-                token_obj  = getObj("graphic", toid);
-                // determine who controls the token
-                controler  =  token_obj.get("controlledby");
-                if (controler === '' || playerIsGM(controler) ){
-                    tokentype = 'npc';
-                }
-                else {
-                    tokentype = 'pc';                    
-                }
-                
-                char_name = getObj("graphic", toid).get("name"); 
-                // handle the turn marder token
-                if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; } else {char_edges = "0";}
-                initEdges[i] = { id: toid, edges : char_edges, name: char_name , toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)   };
-              
-                // sendChat('','Player type : '+tokentype+ '<br>Name: '+ initEdges[i].name);
-            }
-            // turn order item is a "token that represents a character", look for init edges 
-            else if ( getObj("character", getObj("graphic", toid).get("represents")) ) {
-                
-                
-                // from the graphic id, get the token object
-                token_obj = getObj("graphic", toid);
-                // determine who controls the token
-                controler  =  token_obj.get("controlledby");
-                // sendChat('','controlled by: '+controler);
-                if (controler === '' || playerIsGM(controler) ){
-                    tokentype = 'npc';
-                }
-                else {
-                    tokentype = 'pc';                    
-                }
-                // from the token object, get the character that it reperesents
-                char_obj    = getObj("character", token_obj.get("represents"));
-                // get the name of the character
-                char_name  = char_obj.get("name"); 
-               
-                char_edges = "0"; 
-                if (char_obj !== "") {
-                    // the get "current" value of InitEdges, if any
-                    if ( !getAttrByName(char_obj.id, "InitEdges")) {
-                        char_edges = "0";
-                        sendChat('', '/w gm No Init Edges for: '+ char_name);
-                    }
-                    else {
-                        char_edges = getAttrByName(char_obj.id, "InitEdges");
-                    }                    
-                    // turn marker gets here
-                    // sendChat('', 'looking for round in name: ' + char_name + ' index: ' + char_name.indexOf('Round'));
-                    if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; }
-        		}
-                initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
-                
-            }
-            else {
-                // turn marker script uses a token in turn order that doesn't follow the rules, I initialize the obj to make it safe
-                initEdges[i] = { id : toid, edges : "SKIP", name: "unknown",  toktype:"npc", shortname: "unknown" };
-            }
-            // sendChat('','/w '+who+' ' +divStart + 'DealInit: Character <p>Name: '+ initEdges[i].name  + '<p>Edges: '+ initEdges[i].edges+ '<p>ID: '+ initEdges[i].id + '<p>Token Type: '+ initEdges[i].toktype + divEnd );
-        }  // next i
-        // log(initEdges);
-    
-    },
-
-
-
-
-    // every time we deal, we need to
-    // o pull turn order tokens
-    // o get names, ids, and init edges  
-    // o deal cards to hand, accounting for init edges and end of deck and jokers
-    // o no cards to custom items in init - set to -1 init to put them at the bottom
-    // o on recall and shuffle, don't destroy hand unless new scene/combat (createDeck)
-    // o sort the hand high to low
-    // o write the hand to turn order
-    dealInitiative =function(id) {
-        // log('-=> DealInit: Calling [getInitiativeEdges] function <=- ');
-         // pulls turn order tokens and fills initEdges object with names,ids,edges
-        getInitiativeEdges(id);
-        // log('-=> DealInit: back from [getInitiativeEdges] function <=- ');
-        deal(id);
-    },
-
-
-    showHelp = function(id) {
+//-----------------------------------------------------------------------------
+// showHelp(): Display command line help in chat
+//-----------------------------------------------------------------------------
+showHelp = function(id) {
 		
   var  who=getObj('player',id).get('_displayname').split(' ')[0];
         sendChat('',
@@ -698,91 +734,104 @@ display = function(id) {
     +'</div>'
 +'</div>'
     		);
-	},
+},
 
-    // possible args
-    // !deal-init 
-    // --help - show help (showHelp)
-    // (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
-    // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
-    // --show - show the cards in turnorder, discard, draw piles (showCards)
+
+//-----------------------------------------------------------------------------
+// handleInput(): Parse command line args
+//-----------------------------------------------------------------------------
+// possible args
+// !deal-init 
+// --help - show help (showHelp)
+// (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
+// --reset - creates and shuffles the deck, use at the start of combat/scene (init)
+// --show - show the cards in turnorder, discard, draw piles (showCards)
+handleInput = function(msg_orig) {
     
-    handleInput = function(msg_orig) {
+    var msg = _.clone(msg_orig);
+    var args = [];
+    
+    if (msg.type !== "api") {
+		return;
+	 }
 
+
+
+    args = msg.content
+        .replace(/<br\/>\n/g, ' ')
+        .replace(/(\{\{(.*?)\}\})/g," $2 ")
+        .split(/\s+--/);
         
-        var msg = _.clone(msg_orig);
-        var args = [];
-        
 
 
-        if (msg.type !== "api") {
-			return;
-		}
+    // bail out if api call is not to deal-init
+    if (args.shift() !== "!deal-init") {
+        // log('-=> DealInit: Not calling [deal-init] exiting... <=- ');
+		return;
+	 }
+
+    // print help
+    if (args[0] === "help") {
+        // log('-=> DealInit: Calling [showHelp] function <=- ');
+        showHelp(msg.playerid);
+        return;
+	 }
+
+    
+    // reset the deck and shuffle 
+    if (args[0] === "reset") {
+    	// log('-=> DealInit: Calling [createDeck] function <=- ');
+        createDeck(msg.playerid);
+        return;
+	 }
+    // print out the contents of turn order, discard, and draw piles
+    if (args[0] === "show") {
+        // log('-=> DealInit: Calling [display] function <=- ');
+        display(msg.playerid);
+        return;
+	 }
 
 
+    // log('-=> DealInit: Calling [dealInitiative] function <=- ');
+    dealInitiative(msg.playerid);
+    // log('-=> DealInit: Back from [dealInitiative] function <=- ');
+	 return;
+    
+}, // end handle input
 
-        args = msg.content
-            .replace(/<br\/>\n/g, ' ')
-            .replace(/(\{\{(.*?)\}\})/g," $2 ")
-            .split(/\s+--/);
-            
+//-----------------------------------------------------------------------------
+// checkInstall(): Send version info to console log.
+//-----------------------------------------------------------------------------
+checkInstall = function() {
+	log('-=> DealInit v'+version+' <=- ' + lastUpdate);
+},
 
+//-----------------------------------------------------------------------------
+// registerEventHandlers(): Get command line parser watching chat for DealInit commands
+//-----------------------------------------------------------------------------
+registerEventHandlers = function() {
+	on('chat:message', handleInput);
+};
 
-        // bail out if api call is not to deal-init
-        if (args.shift() !== "!deal-init") {
-            // log('-=> DealInit: Not calling [deal-init] exiting... <=- ');
-    		return;
-		}
+//-----------------------------------------------------------------------------
+// configure deal init on load
+//-----------------------------------------------------------------------------
+return {
+	CheckInstall: checkInstall,
+	RegisterEventHandlers: registerEventHandlers
+};
 
-        // print help
-        if (args[0] === "help") {
-            // log('-=> DealInit: Calling [showHelp] function <=- ');
-            showHelp(msg.playerid);
-            return;
-		}
-
-        
-        // reset the deck and shuffle 
-        if (args[0] === "reset") {
-        	// log('-=> DealInit: Calling [createDeck] function <=- ');
-            createDeck(msg.playerid);
-            return;
-		}
-        // print out the contents of turn order, discard, and draw piles
-        if (args[0] === "show") {
-            // log('-=> DealInit: Calling [display] function <=- ');
-            display(msg.playerid);
-            return;
-		}
-
-
-        // log('-=> DealInit: Calling [dealInitiative] function <=- ');
-        dealInitiative(msg.playerid);
-        // log('-=> DealInit: Back from [dealInitiative] function <=- ');
-    	return;
-        
-    }, // end handle input
-
-    checkInstall = function() {
-		log('-=> DealInit v'+version+' <=- ' + lastUpdate);
-	},
-
-	registerEventHandlers = function() {
-		on('chat:message', handleInput);
-	};
-
-	return {
-		CheckInstall: checkInstall,
-		RegisterEventHandlers: registerEventHandlers
-	};
 }()); // end DealInit
 
 
 
+//-----------------------------------------------------------------------------
+// configure deal init on load
+//-----------------------------------------------------------------------------
 on("ready",function(){
-    'use strict';
-
+   'use strict';
 	DealInit.CheckInstall();
 	DealInit.RegisterEventHandlers();
 });
+
 
