@@ -24,7 +24,7 @@ The script only has a few options:
 --show Show the current contents of the deck, discard pile, and turn order (hand).
 
 
-I personally use 3 macros to call the script that look like this:
+I personally use 2 macros to call the script that look like this:
 "New Scene"
 !deal-init --reset
 !deal-init
