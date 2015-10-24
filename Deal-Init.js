@@ -3,15 +3,18 @@
 // Contact:  https://app.roll20.net/users/8948/pat
 
 // ask Aaron
-// o How to avoid getAttrByName log errors
+// o How to avoid getAttrByName log errors - not possible right now, in the Roll20 Dev backlog.
 
 // on deck
-// configs to show/hide chat init edge output
+// o Configs to show/hide chat init edge output
+// o Cmd line arg to toggle On Hold for the token at the top of the order
+// o Stop setting card for round counters to -1 and move them to the bottom of the order in the sort 
 // once and only once in deal()
 
 //Rev History
 // 0.4 minimize chat output
 // 0.5 fancy card symbols - thanks Aaron!
+// 0.6 skipping tokens that are still On Hold a the end of the round - thanks GV!
 
 
 // used by jslint tool:  http://www.jslint.com/
