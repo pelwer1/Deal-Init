@@ -13,6 +13,8 @@ The Edge shorthand is as follows: (spelling and case count!)
   ILH = Improved Level Headed
   WCE = Any Joker Activated Wild Card Edge (announced in turn order)
 
+Going on Hold is accomplished by the GM editing the affected token's card to be "H" or "h."  As long as the card is an H/h, DealInit will not deal a card to that token and will put it at the top of the order on a new round.  The GM must set the card to an non-H/h value in order for DealInit to start dealing to that token again.
+
 The script only has a few options:
 
 !deal-init [ --help ] [--reset ] [ --show ]
@@ -21,12 +23,15 @@ The script only has a few options:
 --reset Reset the deck and shuffle. Use at the start of a new scene or encounter to start the deck fresh
 --show Show the current contents of the deck, discard pile, and turn order (hand).
 
-I personally use 2 macros to call the script that look like this:
+
+I personally use 3 macros to call the script that look like this:
 "New Scene"
 !deal-init --reset
 !deal-init
 
 "New Round"
 !deal-init
+
+
 
 
