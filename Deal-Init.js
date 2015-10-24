@@ -14,7 +14,7 @@
 //Rev History
 // 0.4 minimize chat output
 // 0.5 fancy card symbols - thanks Aaron!
-// 0.6 now skipping tokens that are still On Hold a the end of the round - thanks GV!
+// 0.6 skipping tokens that are still On Hold a the end of the round - thanks GV!
 //     stopped setting init value of Round counters to -1 - thanks GV!
 
 
@@ -341,7 +341,7 @@ display = function(id) {
     s += deck.cards[i].cardRank + ',' + deck.cards[i].shortName + ',' + deck.cards[i].longName + "<p>";
   }
   sendChat('','/w '+who+' ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
-		+'DealInit: Deck Cards</div>'+ s + divEnd );
+    	+'DealInit: Deck Cards</div>'+ s + divEnd );
 
   s = "";
   for (i = 0; i < hand.cardCount(); i+=1) {
