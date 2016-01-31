@@ -16,6 +16,7 @@
 // 0.5 fancy card symbols - thanks Aaron!
 // 0.6 skipping tokens that are still On Hold a the end of the round - thanks GV!
 //     stopped setting init value of Round counters to -1 - thanks GV!
+// 0.7 Fixed bug where hold was being interpreted as a joker - thanks Maetco!
 
 
 // used by jslint tool:  http://www.jslint.com/
@@ -29,7 +30,7 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
-    var version = '0.6',
+    var version = '0.7',
         lastUpdate = '[Last Update: Oct 25, 2015, 11am]',
         jokerLastRound = 0,
         chatOutputLength = 4,
@@ -143,7 +144,7 @@ stackMakeDeck = function() {
     this.cards[51] = new Card(51,"A&"+"spades;","Ace of Spades" );
     this.cards[52] = new Card(52,"BJo","Black Joker" );
     this.cards[53] = new Card(53,"RJo","Red Joker" );
-    
+    // note: Tokens on hold are set = 55 to keep them at the top of the init order
 },
 
 //-----------------------------------------------------------------------------
@@ -652,7 +653,7 @@ deal = function(id) {
             }
         }
         // check for jokers
-        if(turnorder[i].rank > 51){ 
+        if(turnorder[i].rank === 52 || turnorder[i].rank === 53 ){ 
             jokerLastRound = 1; 
             if (initEdges[i].edges.indexOf('WCE') !== -1 ) {
                 // send message to chat regarding wild card edge activation  - should only send this to the "controlled by" list
