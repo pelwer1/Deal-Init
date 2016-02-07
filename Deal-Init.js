@@ -248,7 +248,7 @@ createDeck = function(id) {
   jokerLastRound = 0;
   if (verboseMode ) {
     var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
-    sendChat('','/w '+whoVM+"VERBOSE: CreateDeck Function: JokerLastRound set to 0." );
+    sendChat('','/w '+whoVM+" VERBOSE: CreateDeck Function: JokerLastRound set to 0." );
   }
 },
 
@@ -563,7 +563,7 @@ deal = function(id) {
     jokerLastRound = 0;
     if (verboseMode ) {
       var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
-      sendChat('','/w '+whoVM+"VERBOSE: Deal Function1: JokerLastRound set to 0." );
+      sendChat('','/w '+whoVM+" VERBOSE: Deal Function1: JokerLastRound set to 0." );
     }
   }
     // deal and handle init edges
@@ -672,7 +672,7 @@ deal = function(id) {
             }
             if (verboseMode ) {
               var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
-              sendChat('','/w '+whoVM+"VERBOSE: Deal Function2: JokerLastRound set to 1." );
+              sendChat('','/w '+whoVM+" VERBOSE: Deal Function2: JokerLastRound set to 1." );
             }
         }
     } // end for i ....
