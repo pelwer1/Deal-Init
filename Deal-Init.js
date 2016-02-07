@@ -17,6 +17,7 @@
 // 0.6 skipping tokens that are still On Hold a the end of the round - thanks GV!
 //     stopped setting init value of Round counters to -1 - thanks GV!
 // 0.7 Fixed bug where hold was being interpreted as a joker - thanks Maetco!
+// 0.8 Added verbose mode to track Joker handling
 
 
 // used by jslint tool:  http://www.jslint.com/
@@ -30,9 +31,10 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
-    var version = '0.7',
+    var version = '0.8',
         lastUpdate = '[Last Update: Oct 25, 2015, 11am]',
         jokerLastRound = 0,
+        verboseMode = 0,
         chatOutputLength = 4,
         deck      = {},
         hand      = {},
@@ -244,6 +246,10 @@ createDeck = function(id) {
   // sendChat('','/w '+who+" Action Deck reset." );
   shuffle();
   jokerLastRound = 0;
+  if (verboseMode ) {
+    var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
+    sendChat('','/w '+whoVM+"VERBOSE: CreateDeck Function: JokerLastRound set to 0." );
+  }
 },
 
 //-----------------------------------------------------------------------------
@@ -555,6 +561,10 @@ deal = function(id) {
     deck.combine(discards);
     shuffle();
     jokerLastRound = 0;
+    if (verboseMode ) {
+      var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
+      sendChat('','/w '+whoVM+"VERBOSE: Deal Function1: JokerLastRound set to 0." );
+    }
   }
     // deal and handle init edges
     var nextcard = {};
@@ -659,6 +669,10 @@ deal = function(id) {
                 // send message to chat regarding wild card edge activation  - should only send this to the "controlled by" list
                 sendChat('', sendto + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
                     +initEdges[i].name+'</div>Your Joker activates your <b>Wild Card edge!</b>'+ divEnd );
+            }
+            if (verboseMode ) {
+              var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
+              sendChat('','/w '+whoVM+"VERBOSE: Deal Function2: JokerLastRound set to 1." );
             }
         }
     } // end for i ....
