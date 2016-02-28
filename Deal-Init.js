@@ -41,6 +41,7 @@
 var DealInit = DealInit || (function() {
     'use strict';
 
+
     var version = '0.9',
         lastUpdate = '[Last Update: Oct 25, 2015, 11am]',
         jokerLastRound = 0,
