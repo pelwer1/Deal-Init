@@ -553,6 +553,8 @@ deal = function(id) {
   // detect --onlyto usage
   if ( onlyToString.length > 0 ) {
     onlyToActive = 1;	
+    sendChat('','/w gm onlyto active.  Looking for string: ' + '<u>'+onlyToString+'</u>' );
+
   } 
 
   // build deck if needed (ok for --onlyto)
@@ -776,7 +778,7 @@ showHelp = function(id) {
 					+'<b><span style="font-family: serif;">'+'--show'+'</span></b> '+' Show the current contents of the deck, discard pile, and turn order.'
 				+'</li> '
     			+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
-					+'<b><span style="font-family: serif;">'+'--onlyto'+'</span></b> '+' deals cards only to names that contain string. (case sensitive)'
+					+'<b><span style="font-family: serif;">'+'--onlyto --string'+'</span></b> '+' deals cards only to names that contain "string". (case sensitive)'
 				+'</li> '
     		+'</ul>'
     	+'</div>'
@@ -795,7 +797,7 @@ showHelp = function(id) {
 // (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
 // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
 // --show - show the cards in turnorder, discard, draw piles (showCards)
-// --onlyto - deals cards only to names that contain string (case sensitive)
+// --onlyto --string- deals cards only to names that contain string (case sensitive)
 handleInput = function(msg_orig) {
     
     var msg = _.clone(msg_orig);
