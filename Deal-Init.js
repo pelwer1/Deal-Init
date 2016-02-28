@@ -847,8 +847,8 @@ handleInput = function(msg_orig) {
     // deal only to tokes where name contains string
     if (args[0] === "onlyto") {
         onlyToString = args[1];
-        // do not return - ned to flow thru to normal dealing process;
-        log('-=> DealInit: Using [onlyto] option.  Match String is'+ onlyToString  +'<=- ');
+        // do not return - need to flow thru to normal dealing process;
+        // log('-=> DealInit: Using [onlyto] option.  Match String is'+ onlyToString  +'<=- ');
 	 }
 
 
