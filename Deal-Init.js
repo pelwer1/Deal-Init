@@ -18,15 +18,25 @@
 //     stopped setting init value of Round counters to -1 - thanks GV!
 // 0.7 Fixed bug where hold was being interpreted as a joker - thanks Maetco!
 // 0.8 Added verbose mode to track Joker handling
+// 0.9 added --onlyTo as means to deal to specified cards from command line. Ignores Hold state  
+//     Use if adding a token after dealing or to take someone off hold after dealing.
 
 
 // used by jslint tool:  http://www.jslint.com/
-/*jslint
+/* jslint
    for, fudge, this, white
 */
-/*global
+/* global
    Campaign, sendChat, getObj, getAttrByName
 */
+/* property
+    CheckInstall, RegisterEventHandlers, addCard, cardCount, cardRank, cards,
+    clone, combine, concat, content, custom, deal, draw, edges, floor, get, id,
+    indexOf, length, longName, makeDeck, name, parse, playerid, pr, push,
+    random, rank, replace, reverse, set, shift, shortName, shortname, shuffle,
+    sortBy, splice, split, stringify, substr, toktype, type
+*/
+
 
 var DealInit = DealInit || (function() {
     'use strict';
@@ -34,6 +44,7 @@ var DealInit = DealInit || (function() {
     var version = '0.8',
         lastUpdate = '[Last Update: Oct 25, 2015, 11am]',
         jokerLastRound = 0,
+        onlyToString = '',
         verboseMode = 0,
         chatOutputLength = 4,
         deck      = {},
@@ -451,7 +462,7 @@ getInitiativeEdges = function (id) {
          if ( turnorder[i].pr === "H" || turnorder[i].pr === "h" ) {
          	tokenOnHold = 1;
          	char_name = getObj("graphic", toid).get("name");
-         	sendChat('','/w gm ' +char_name+ ' is On Hold this round!')
+         	sendChat('','/w gm ' +char_name+ ' is On Hold this round!');
          }
 
         // if the turn order item is a "custom item", mark it as a skip for dealing init
@@ -535,18 +546,25 @@ deal = function(id) {
   var i;
   var  who=getObj('player',id).get('_displayname').split(' ')[0];
   var sendto = "";
+  var onlyToActive = 0;
   var turnorder = getTurnOrder();
-  
-  // build deck if needed
+
+  // detect --onlyto usage
+  if ( onlyToString.length > 0 ) {
+    onlyToActive = 1;	
+  } 
+
+  // build deck if needed (ok for --onlyto)
   if (!deck.cards) { 
     createDeck(id);
     shuffle();
   }
 
   // move hand (current turn order) to discard pile
-  if (hand.cards) { discards.combine(hand); }
+  // if --onlyto is in use do not disturb the other cards previous dealt for this round
+  if (hand.cards && !onlyToActive) { discards.combine(hand); }
 
-  // shuffle if deck is empty
+  // shuffle if deck is empty (ok for --onlyto)
   if (deck.cardCount() === 0 ) {
     sendChat('','/em Out of Action Cards - shuffling discards.' );
     deck.combine(discards);
@@ -554,7 +572,8 @@ deal = function(id) {
   }
 
   // shuffle if there was a joker last round
-  if (jokerLastRound === 1 ) {
+  // if --onlyto is in use do not shuffle on joker as the joker round is not over yet
+  if (jokerLastRound === 1 && !onlyToActive ) {
     sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
             +'Joker Last Round!'+'</div>Reshuffling discard pile...'+ divEnd );
     discards.combine(hand);
@@ -569,6 +588,11 @@ deal = function(id) {
     // deal and handle init edges
     var nextcard = {};
     for (i = 0; i < turnorder.length; i+=1) {
+    	
+      // if --onlyto is active, we need to selectively execute this loop for only matching names
+      // otherwise execute the loop for every turn order entry
+      if ( (!onlyToActive) || (onlyToActive && initEdges[i].name.indexOf(onlyToString) !== -1 ) ) {
+
         sendto = "/em "; // send messages to everyone by default
         if (initEdges[i].toktype === 'npc') { sendto = "/w gm ";}
 
@@ -578,8 +602,10 @@ deal = function(id) {
             turnorder[i].rank = "-1";
             
         }
-		  // give tokens On Hold the highest rank
-        else if (initEdges[i].edges === "HOLD" ) {
+        
+        // give tokens On Hold the highest rank
+        // ignore Hold state if onlyto is active, we will deal over it
+        else if (initEdges[i].edges === "HOLD" && !onlyToActive ) {
             turnorder[i].rank = "55";            
         }
         
@@ -675,7 +701,11 @@ deal = function(id) {
               sendChat('','/w '+whoVM+" VERBOSE: Deal Function2: JokerLastRound set to 1." );
             }
         }
+      } // end if !onlyto || onlyto and matching name
     } // end for i ....
+
+    // clear onlyto match string
+    onlyToString = '';
 
     // sort turnorder
     var sortedturnorder = _.sortBy(turnorder, 'rank').reverse();
@@ -761,6 +791,7 @@ showHelp = function(id) {
 // (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
 // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
 // --show - show the cards in turnorder, discard, draw piles (showCards)
+// --onlyto - deals cards only to names that contain string
 handleInput = function(msg_orig) {
     
     var msg = _.clone(msg_orig);
@@ -799,11 +830,19 @@ handleInput = function(msg_orig) {
         createDeck(msg.playerid);
         return;
 	 }
+
     // print out the contents of turn order, discard, and draw piles
     if (args[0] === "show") {
         // log('-=> DealInit: Calling [display] function <=- ');
         display(msg.playerid);
         return;
+	 }
+
+    // deal only to tokes where name contains string
+    if (args[0] === "onlyto") {
+        onlyToString = args[1];
+        // do not return - ned to flow thru to normal dealing process;
+        log('-=> DealInit: Using [onlyto] option.  Match String is'+ onlyToString  +'<=- ');
 	 }
 
 
