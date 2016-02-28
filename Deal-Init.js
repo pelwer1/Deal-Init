@@ -43,7 +43,7 @@ var DealInit = DealInit || (function() {
 
 
     var version = '0.9',
-        lastUpdate = '[Last Update: Oct 25, 2015, 11am]',
+        lastUpdate = '[Last Update: Feb 28, 2016, 11am]',
         jokerLastRound = 0,
         onlyToString = '',
         verboseMode = 0,
@@ -775,6 +775,9 @@ showHelp = function(id) {
     			+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+'--show'+'</span></b> '+' Show the current contents of the deck, discard pile, and turn order.'
 				+'</li> '
+    			+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+'--onlyto'+'</span></b> '+' deals cards only to names that contain string. (case sensitive)'
+				+'</li> '
     		+'</ul>'
     	+'</div>'
     +'</div>'
@@ -792,7 +795,7 @@ showHelp = function(id) {
 // (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
 // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
 // --show - show the cards in turnorder, discard, draw piles (showCards)
-// --onlyto - deals cards only to names that contain string
+// --onlyto - deals cards only to names that contain string (case sensitive)
 handleInput = function(msg_orig) {
     
     var msg = _.clone(msg_orig);
