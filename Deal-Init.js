@@ -452,6 +452,7 @@ getInitiativeEdges = function (id) {
     } 
 
 
+
     var token_obj = {};
     var char_obj = {};
     var toid, controler, tokenOnHold, tokentype;
