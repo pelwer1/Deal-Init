@@ -17,15 +17,15 @@ Going on Hold is accomplished by the GM editing the affected token's card to be 
 
 The script only has a few options:
 
-!deal-init [ --help ] [--reset ] [ --show ] [ --onlyto string ]
+!deal-init [ --help ] [--reset ] [ --show ] [ --onlyto --string ]
 (no args) Deals cards to turn order and sorts by suit.
 --help : Displays the help.
 --reset : Reset the deck and shuffle. Use at the start of a new scene or encounter to start the deck fresh
 --show : Shows the current contents of the deck, discard pile, and turn order (hand)
---onlyto string : Deal initiative only to tokens that contain string.  Overwrites init if token is on hold
+--onlyto --string : Deal initiative only to token names that contain "string".  Overwrites init if token is on hold. Case sensitive.
 
 
-I personally use 2 macros to call the script that look like this:
+I personally use 3 macros to call the script that look like this:
 "New Scene"
 !deal-init --reset
 !deal-init
@@ -33,7 +33,8 @@ I personally use 2 macros to call the script that look like this:
 "New Round"
 !deal-init
 
-"Deal to"
-!deal-init --onlyto ?{Enter string}
+"Deal Only To"
+!deal-init --onlyto --?{Enter name to deal to|string}
+
 
 
