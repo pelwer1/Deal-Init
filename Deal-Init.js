@@ -459,7 +459,7 @@ getInitiativeEdges = function (id) {
     for (i = 0; i < turnorder.length; i+=1) {
          // sendChat('',divStart + 'DealInit: TO ID: '+ turnorder[i].id + divEnd );
          toid = turnorder[i].id;
-			tokenOnHold = 0;
+	 tokenOnHold = 0;
          if ( turnorder[i].pr === "H" || turnorder[i].pr === "h" ) {
          	tokenOnHold = 1;
          	char_name = getObj("graphic", toid).get("name");
@@ -510,6 +510,7 @@ getInitiativeEdges = function (id) {
             char_obj    = getObj("character", token_obj.get("represents"));
             // get the name of the character
             char_name  = char_obj.get("name"); 
+            turn_order_name = getObj("graphic", toid).get("name");
            
             char_edges = "0"; 
             if (char_obj !== "") {
@@ -526,7 +527,10 @@ getInitiativeEdges = function (id) {
                 if (char_name.indexOf('Round') !== -1 ) { char_edges = "SKIP"; } 
                 if (tokenOnHold === 1) { char_edges = "HOLD"; } 
     		}
-            initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
+    	    // for --onlyto to work intuitively we must use token names in the initedges array.  
+    	    // Otherwise users are trying to match character names and not token names - token names are displayed in the turnorder
+            // initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
+            initEdges[i] = { id : toid, edges : char_edges, name: turn_order_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
             
         }
         else {
