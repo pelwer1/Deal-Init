@@ -440,6 +440,7 @@ getInitiativeEdges = function (id) {
 
     var char_edges = "";
     var char_name = "";
+    var turn_order_name = "";
     var turnorder = getTurnOrder();
     var i;
     var s = "";
