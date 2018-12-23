@@ -20,6 +20,7 @@
 // 0.8 Added verbose mode to track Joker handling
 // 0.9 added --onlyTo as means to deal to specified cards from command line. Ignores Hold state  
 //     Use if adding a token after dealing or to take someone off hold after dealing.
+// 1.0 addded support for --deal2chat and Tactician/Master Tactician Edges from SWADE
 
 
 // used by jslint tool:  http://www.jslint.com/
@@ -42,10 +43,12 @@ var DealInit = DealInit || (function() {
     'use strict';
 
 
-    var version = '0.9',
-        lastUpdate = '[Last Update: Feb 28, 2016, 11am]',
+    var version = '1.0',
+        lastUpdate = '[Last Update: Dec 22, 2018, 5pm Pacific]',
         jokerLastRound = 0,
+	jokerInChat = 0,
         onlyToString = '',
+	dealToChat = 0,
         verboseMode = 0,
         chatOutputLength = 4,
         deck      = {},
@@ -519,7 +522,9 @@ getInitiativeEdges = function (id) {
                 // the get "current" value of InitEdges, if any
                 if ( !getAttrByName(char_obj.id, "InitEdges")) {
                     char_edges = "0";
-                    sendChat('', '/w gm No Init Edges for: '+ char_name);
+		    if( !dealToChat ) {
+                       sendChat('', '/w gm No Init Edges for: '+ char_name);
+		    }
                 }
                 else {
                     char_edges = getAttrByName(char_obj.id, "InitEdges");
@@ -544,7 +549,7 @@ getInitiativeEdges = function (id) {
     // log(initEdges);
 
 },
-
+	
 //-----------------------------------------------------------------------------
 // deal(): Deals cards to turn order items and sorts
 //-----------------------------------------------------------------------------
@@ -554,13 +559,18 @@ deal = function(id) {
   var  who=getObj('player',id).get('_displayname').split(' ')[0];
   var sendto = "";
   var onlyToActive = 0;
+  var dealToChatActive = 0;
   var turnorder = getTurnOrder();
 
   // detect --onlyto usage
   if ( onlyToString.length > 0 ) {
     onlyToActive = 1;	
     sendChat('','/w gm onlyto active.  Looking for string: ' + '<u>'+onlyToString+'</u>' );
+  } 
 
+  // detect --deal2chat usage
+  if ( dealToChat ) {
+    dealToChatActive = 1;	
   } 
 
   // build deck if needed (ok for --onlyto)
@@ -570,8 +580,8 @@ deal = function(id) {
   }
 
   // move hand (current turn order) to discard pile
-  // if --onlyto is in use do not disturb the other cards previous dealt for this round
-  if (hand.cards && !onlyToActive) { discards.combine(hand); }
+  // if --onlyto or --deal2chat is in use do not disturb the other cards previous dealt for this round
+  if (hand.cards && !onlyToActive && !dealToChat) { discards.combine(hand); }
 
   // shuffle if deck is empty (ok for --onlyto)
   if (deck.cardCount() === 0 ) {
@@ -581,8 +591,8 @@ deal = function(id) {
   }
 
   // shuffle if there was a joker last round
-  // if --onlyto is in use do not shuffle on joker as the joker round is not over yet
-  if (jokerLastRound === 1 && !onlyToActive ) {
+  // if --onlyto or -- deal2chat is in use do not shuffle on joker as the joker round is not over yet
+  if (jokerLastRound === 1 && !onlyToActive && !dealToChat ) {
     sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
             +'Joker Last Round!'+'</div>Reshuffling discard pile...'+ divEnd );
     discards.combine(hand);
@@ -599,8 +609,8 @@ deal = function(id) {
     for (i = 0; i < turnorder.length; i+=1) {
     	
       // if --onlyto is active, we need to selectively execute this loop for only matching names
-      // otherwise execute the loop for every turn order entry
-      if ( (!onlyToActive) || (onlyToActive && initEdges[i].name.indexOf(onlyToString) !== -1 ) ) {
+      // otherwise execute the loop for every turn order entry -unless dea2chat then execute loop once
+      if ( (!onlyToActive) || (onlyToActive && initEdges[i].name.indexOf(onlyToString) !== -1 ) || dealToChat) {
 
         sendto = "/em "; // send messages to everyone by default
         if (initEdges[i].toktype === 'npc') { sendto = "/w gm ";}
@@ -609,15 +619,34 @@ deal = function(id) {
         // turn order and initEdges are in the same array order - counting on this!
         if (initEdges[i].edges === "SKIP" ) {
             turnorder[i].rank = "-1";
-            
         }
         
         // give tokens On Hold the highest rank
-        // ignore Hold state if onlyto is active, we will deal over it
+        // ignore Hold state if --onlyto is active, we will deal over it
         else if (initEdges[i].edges === "HOLD" && !onlyToActive ) {
             turnorder[i].rank = "55";            
         }
-        
+        // xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/////////////////x//////////////////////////////
+	// deal to chat
+	else if ( dealToChat ) {
+	    if( dealToChatActive ) {
+ 	       if (deck.cardCount() === 0 ) {
+                  sendChat('','/em Out of Action Cards - shuffling discards.' );
+              	  deck.combine(discards);
+               	  shuffle();
+               }
+   	       // draw a card
+               nextcard =  deck.deal();
+               // send the card drawn to chat
+               sendChat('','/em Deal2Chat:  ' + nextcard.shortName );
+               // if a joker was dealt tochat, we need to shuffle
+	       if( nextcard.cardRank === 52 || nextcard.cardRank === 53 ){ 
+		   jokerInChat = 1;
+	       }
+            }
+	    // clear deal to chat to only deal 1 time
+            dealToChatActive = 0;
+	}
         else { 
             // sendChat('','/w '+who+" Deck Card Count: " + deck.cardCount() );
             if (deck.cardCount() === 0 ) {
@@ -698,8 +727,9 @@ deal = function(id) {
             }
         }
         // check for jokers
-        if(turnorder[i].rank === 52 || turnorder[i].rank === 53 ){ 
+        if(turnorder[i].rank === 52 || turnorder[i].rank === 53 || jokerInChat ){ 
             jokerLastRound = 1; 
+	    jokerInChat = 0;
             if (initEdges[i].edges.indexOf('WCE') !== -1 ) {
                 // send message to chat regarding wild card edge activation  - should only send this to the "controlled by" list
                 sendChat('', sendto + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
@@ -713,8 +743,9 @@ deal = function(id) {
       } // end if !onlyto || onlyto and matching name
     } // end for i ....
 
-    // clear onlyto match string
+    // clear onlyto match string and deal2chat
     onlyToString = '';
+    dealToChat = 0;
 
     // sort turnorder
     var sortedturnorder = _.sortBy(turnorder, 'rank').reverse();
@@ -764,6 +795,8 @@ showHelp = function(id) {
         +'<p><b>Qui</b> = Quick</p>'
         +'<p><b>LH</b> = Level Headed</p>'
         +'<p><b>ILH</b> = Improved Level Headed</p>'
+        +'<p><b>TT</b> = Tactician (cards dealt to chat window)</p>'
+        +'<p><b>MTT</b> = Master Tactician (cards dealt to chat window)</p>'		 
         +'<p><b>WCE</b> = Any Joker Activated Wild Card Edge</p>'
 	+'</div>'
 	+'<b>Commands</b>'
@@ -786,6 +819,9 @@ showHelp = function(id) {
     			+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+'--onlyto --string'+'</span></b> '+' deals cards only to names that contain "string". (case sensitive)'
 				+'</li> '
+		     	+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+'--deal2chat'+'</span></b> '+' deals one card to chat window (use when player spends a benny to redraw)'
+				+'</li> '
     		+'</ul>'
     	+'</div>'
     +'</div>'
@@ -804,6 +840,7 @@ showHelp = function(id) {
 // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
 // --show - show the cards in turnorder, discard, draw piles (showCards)
 // --onlyto --string- deals cards only to names that contain string (case sensitive)
+// --deal2chat - deal 1 card to chat
 handleInput = function(msg_orig) {
     
     var msg = _.clone(msg_orig);
@@ -850,11 +887,18 @@ handleInput = function(msg_orig) {
         return;
 	 }
 
-    // deal only to tokes where name contains string
+    // deal only to tokens where name contains string
     if (args[0] === "onlyto") {
         onlyToString = args[1];
         // do not return - need to flow thru to normal dealing process;
         // log('-=> DealInit: Using [onlyto] option.  Match String is'+ onlyToString  +'<=- ');
+	 }
+
+    // deal one card to chat (spending bennies or tactician edges )
+    if (args[0] === "deal2chat") {
+        dealToChat = 1;
+        // do not return - need to flow thru to normal dealing process;
+        // log('-=> DealInit: Using [deal2chat] option. <=- ');
 	 }
 
 
