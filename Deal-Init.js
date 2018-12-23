@@ -22,7 +22,7 @@
 //     Use if adding a token after dealing or to take someone off hold after dealing.
 // 1.0 addded support for --deal2chat and Tactician/Master Tactician Edges from SWADE
 
-
+ 
 // used by jslint tool:  http://www.jslint.com/
 /* jslint
    for, fudge, this, white
