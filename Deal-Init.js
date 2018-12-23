@@ -20,8 +20,9 @@
 // 0.8 Added verbose mode to track Joker handling
 // 0.9 added --onlyTo as means to deal to specified cards from command line. Ignores Hold state  
 //     Use if adding a token after dealing or to take someone off hold after dealing.
+// 1.0 addded support for --deal2chat and Tactician/Master Tactician Edges from SWADE
 
-
+ 
 // used by jslint tool:  http://www.jslint.com/
 /* jslint
    for, fudge, this, white
@@ -42,10 +43,12 @@ var DealInit = DealInit || (function() {
     'use strict';
 
 
-    var version = '0.9',
-        lastUpdate = '[Last Update: Feb 28, 2016, 11am]',
+    var version = '1.0',
+        lastUpdate = '[Last Update: Dec 22, 2018, 5pm Pacific]',
         jokerLastRound = 0,
+	jokerInChat = 0,
         onlyToString = '',
+	dealToChat = 0,
         verboseMode = 0,
         chatOutputLength = 4,
         deck      = {},
@@ -104,60 +107,60 @@ stackMakeDeck = function() {
 
     // fill card deck array with cards: cardRank, shortName,longName)
     // this.cards[0]  = new Card( 0, "2C,"2 of Clubs" );
-    this.cards[0]  = new Card( 0,"2&"+"clubs;","2 of Clubs" );
-    this.cards[1]  = new Card( 1,"2&"+"diams;","2 of Diamonds" );
-    this.cards[2]  = new Card( 2,"2&"+"hearts;","2 of Hearts" );
-    this.cards[3]  = new Card( 3,"2&"+"spades;","2 of Spades" );
-    this.cards[4]  = new Card( 4,"3&"+"clubs;","3 of Clubs" );
-    this.cards[5]  = new Card( 5,"3&"+"diams;","3 of Diamonds" );
-    this.cards[6]  = new Card( 6,"3&"+"hearts;","3 of Hearts" );
-    this.cards[7]  = new Card( 7,"3&"+"spades;","3 of Spades" );
-    this.cards[8]  = new Card( 8,"4&"+"clubs;","4 of Clubs" );
-    this.cards[9]  = new Card( 9,"4&"+"diams;","4 of Diamonds" );
-    this.cards[10] = new Card(10,"4&"+"hearts;","4 of Hearts" );
-    this.cards[11] = new Card(11,"4&"+"spades;","4 of Spades" );
-    this.cards[12] = new Card(12,"5&"+"clubs;","5 of Clubs" );
-    this.cards[13] = new Card(13,"5&"+"diams;","5 of Diamonds" );
-    this.cards[14] = new Card(14,"5&"+"hearts;","5 of Hearts" );
-    this.cards[15] = new Card(15,"5&"+"spades;","5 of Spades" );
-    this.cards[16] = new Card(16,"6&"+"clubs;","6 of Clubs" );
-    this.cards[17] = new Card(17,"6&"+"diams;","6 of Diamonds" );
-    this.cards[18] = new Card(18,"6&"+"hearts;","6 of Hearts" );
-    this.cards[19] = new Card(19,"6&"+"spades;","6 of Spades" );
-    this.cards[20] = new Card(20,"7&"+"clubs;","7 of Clubs" );
-    this.cards[21] = new Card(21,"7&"+"diams;","7 of Diamonds" );
-    this.cards[22] = new Card(22,"7&"+"hearts;","7 of Hearts" );
-    this.cards[23] = new Card(23,"7&"+"spades;","7 of Spades" );
-    this.cards[24] = new Card(24,"8&"+"clubs;","8 of Clubs" );
-    this.cards[25] = new Card(25,"8&"+"diams;","8 of Diamonds" );
-    this.cards[26] = new Card(26,"8&"+"hearts;","8 of Hearts" );
-    this.cards[27] = new Card(27,"8&"+"spades;","8 of Spades" );
-    this.cards[28] = new Card(28,"9&"+"clubs;","9 of Clubs" );
-    this.cards[29] = new Card(29,"9&"+"diams;","9 of Diamonds" );
-    this.cards[30] = new Card(30,"9&"+"hearts;","9 of Hearts" );
-    this.cards[31] = new Card(31,"9&"+"spades;","9 of Spades" );
-    this.cards[32] = new Card(32,"10&"+"clubs;","10 of Clubs" );
-    this.cards[33] = new Card(33,"10&"+"diams;","10 of Diamonds" );
-    this.cards[34] = new Card(34,"10&"+"hearts;","10 of Hearts" );
-    this.cards[35] = new Card(35,"10&"+"spades;","10 of Spades" );
-    this.cards[36] = new Card(36,"J&"+"clubs;","Jack of Clubs" );
-    this.cards[37] = new Card(37,"J&"+"diams;","Jack of Diamonds" );
-    this.cards[38] = new Card(38,"J&"+"hearts;","Jack of Hearts" );
-    this.cards[39] = new Card(39,"J&"+"spades;","Jack of Spades" );
-    this.cards[40] = new Card(40,"Q&"+"clubs;","Queen of Clubs" );
-    this.cards[41] = new Card(41,"Q&"+"diams;","Queen of Diamonds" );
-    this.cards[42] = new Card(42,"Q&"+"hearts;","Queen of Hearts" );
-    this.cards[43] = new Card(43,"Q&"+"spades;","Queen of Spades" );
-    this.cards[44] = new Card(44,"K&"+"clubs;","King of Clubs" );
-    this.cards[45] = new Card(45,"K&"+"diams;","King of Diamonds" );
-    this.cards[46] = new Card(46,"K&"+"hearts;","King of Hearts" );
-    this.cards[47] = new Card(47,"K&"+"spades;","King of Spades" );
-    this.cards[48] = new Card(48,"A&"+"clubs;","Ace of Clubs" );
-    this.cards[49] = new Card(49,"A&"+"diams;","Ace of Diamonds" );
-    this.cards[50] = new Card(50,"A&"+"hearts;","Ace of Hearts" );
-    this.cards[51] = new Card(51,"A&"+"spades;","Ace of Spades" );
-    this.cards[52] = new Card(52,"BJo","Black Joker" );
-    this.cards[53] = new Card(53,"RJo","Red Joker" );
+    this.cards[0]  = new Card( 0,"2&"+"clubs;"   ,"2 of Clubs" );
+    this.cards[1]  = new Card( 1,"2&"+"diams;"   ,"2 of Diamonds" );
+    this.cards[2]  = new Card( 2,"2&"+"hearts;"  ,"2 of Hearts" );
+    this.cards[3]  = new Card( 3,"2&"+"spades;"  ,"2 of Spades" );
+    this.cards[4]  = new Card( 4,"3&"+"clubs;"   ,"3 of Clubs" );
+    this.cards[5]  = new Card( 5,"3&"+"diams;"   ,"3 of Diamonds" );
+    this.cards[6]  = new Card( 6,"3&"+"hearts;"  ,"3 of Hearts" );
+    this.cards[7]  = new Card( 7,"3&"+"spades;"  ,"3 of Spades" );
+    this.cards[8]  = new Card( 8,"4&"+"clubs;"   ,"4 of Clubs" );
+    this.cards[9]  = new Card( 9,"4&"+"diams;"   ,"4 of Diamonds" );
+    this.cards[10] = new Card(10,"4&"+"hearts;"  ,"4 of Hearts" );
+    this.cards[11] = new Card(11,"4&"+"spades;"  ,"4 of Spades" );
+    this.cards[12] = new Card(12,"5&"+"clubs;"   ,"5 of Clubs" );
+    this.cards[13] = new Card(13,"5&"+"diams;"   ,"5 of Diamonds" );
+    this.cards[14] = new Card(14,"5&"+"hearts;"  ,"5 of Hearts" );
+    this.cards[15] = new Card(15,"5&"+"spades;"  ,"5 of Spades" );
+    this.cards[16] = new Card(16,"6&"+"clubs;"   ,"6 of Clubs" );
+    this.cards[17] = new Card(17,"6&"+"diams;"   ,"6 of Diamonds" );
+    this.cards[18] = new Card(18,"6&"+"hearts;"  ,"6 of Hearts" );
+    this.cards[19] = new Card(19,"6&"+"spades;"  ,"6 of Spades" );
+    this.cards[20] = new Card(20,"7&"+"clubs;"   ,"7 of Clubs" );
+    this.cards[21] = new Card(21,"7&"+"diams;"   ,"7 of Diamonds" );
+    this.cards[22] = new Card(22,"7&"+"hearts;"  ,"7 of Hearts" );
+    this.cards[23] = new Card(23,"7&"+"spades;"  ,"7 of Spades" );
+    this.cards[24] = new Card(24,"8&"+"clubs;"   ,"8 of Clubs" );
+    this.cards[25] = new Card(25,"8&"+"diams;"   ,"8 of Diamonds" );
+    this.cards[26] = new Card(26,"8&"+"hearts;"  ,"8 of Hearts" );
+    this.cards[27] = new Card(27,"8&"+"spades;"  ,"8 of Spades" );
+    this.cards[28] = new Card(28,"9&"+"clubs;"   ,"9 of Clubs" );
+    this.cards[29] = new Card(29,"9&"+"diams;"   ,"9 of Diamonds" );
+    this.cards[30] = new Card(30,"9&"+"hearts;"  ,"9 of Hearts" );
+    this.cards[31] = new Card(31,"9&"+"spades;"  ,"9 of Spades" );
+    this.cards[32] = new Card(32,"10&"+"clubs;"  ,"10 of Clubs" );
+    this.cards[33] = new Card(33,"10&"+"diams;"  ,"10 of Diamonds" );
+    this.cards[34] = new Card(34,"10&"+"hearts;" ,"10 of Hearts" );
+    this.cards[35] = new Card(35,"10&"+"spades;" ,"10 of Spades" );
+    this.cards[36] = new Card(36,"J&"+"clubs;"   ,"Jack of Clubs" );
+    this.cards[37] = new Card(37,"J&"+"diams;"   ,"Jack of Diamonds" );
+    this.cards[38] = new Card(38,"J&"+"hearts;"  ,"Jack of Hearts" );
+    this.cards[39] = new Card(39,"J&"+"spades;"  ,"Jack of Spades" );
+    this.cards[40] = new Card(40,"Q&"+"clubs;"   ,"Queen of Clubs" );
+    this.cards[41] = new Card(41,"Q&"+"diams;"   ,"Queen of Diamonds" );
+    this.cards[42] = new Card(42,"Q&"+"hearts;"  ,"Queen of Hearts" );
+    this.cards[43] = new Card(43,"Q&"+"spades;"  ,"Queen of Spades" );
+    this.cards[44] = new Card(44,"K&"+"clubs;"   ,"King of Clubs" );
+    this.cards[45] = new Card(45,"K&"+"diams;"   ,"King of Diamonds" );
+    this.cards[46] = new Card(46,"K&"+"hearts;"  ,"King of Hearts" );
+    this.cards[47] = new Card(47,"K&"+"spades;"  ,"King of Spades" );
+    this.cards[48] = new Card(48,"A&"+"clubs;"   ,"Ace of Clubs" );
+    this.cards[49] = new Card(49,"A&"+"diams;"   ,"Ace of Diamonds" );
+    this.cards[50] = new Card(50,"A&"+"hearts;"  ,"Ace of Hearts" );
+    this.cards[51] = new Card(51,"A&"+"spades;"  ,"Ace of Spades" );
+    this.cards[52] = new Card(52,"BJo"           ,"Black Joker" );
+    this.cards[53] = new Card(53,"RJo"           ,"Red Joker" );
     // note: Tokens on hold are set = 55 to keep them at the top of the init order
 },
 
@@ -192,6 +195,8 @@ stackDeal = function() {
     return this.cards.shift();
   }
   else {
+    // jump to shuffle instead of return null?
+    sendChat('','/em Big Trouble - Trying to Draw a Card from an Empty Deck!' );  
     return null;
   }
 
@@ -519,7 +524,9 @@ getInitiativeEdges = function (id) {
                 // the get "current" value of InitEdges, if any
                 if ( !getAttrByName(char_obj.id, "InitEdges")) {
                     char_edges = "0";
-                    sendChat('', '/w gm No Init Edges for: '+ char_name);
+		    if( !dealToChat ) {
+                       sendChat('', '/w gm No Init Edges for: '+ char_name);
+		    }
                 }
                 else {
                     char_edges = getAttrByName(char_obj.id, "InitEdges");
@@ -539,28 +546,33 @@ getInitiativeEdges = function (id) {
             // if some script uses a token in turn order that doesn't follow the rules, I initialize the obj to make it safe
             initEdges[i] = { id : toid, edges : "SKIP", name: "unknown",  toktype:"npc", shortname: "unknown" };
         }
-        // sendChat('','/w '+who+' ' +divStart + 'DealInit: Character <p>Name: '+ initEdges[i].name  + '<p>Edges: '+ initEdges[i].edges+ '<p>ID: '+ initEdges[i].id + '<p>Token Type: '+ initEdges[i].toktype + divEnd );
+        // sendChat('','/w '+who+' ' +divStart + 'DealInit: Character <p>Name: '+ initEdges[i].name  + '<p>Edges: '+ initEdges[i].edges+ '<p>ID: '+ initEdges[i].id + '<p>Token Type: '+ initEdges[i].toktype + '<p>Short name: '+ initEdges[i].shortname + divEnd );
     }  // next i
     // log(initEdges);
 
 },
-
+	
 //-----------------------------------------------------------------------------
-// deal(): Deals cards to turn order items and sorts
+// doTheDeal(): Deals cards to turn order items and sorts
 //-----------------------------------------------------------------------------
-deal = function(id) {
+doTheDeal = function(id) {
 
   var i;
   var  who=getObj('player',id).get('_displayname').split(' ')[0];
   var sendto = "";
   var onlyToActive = 0;
+  var dealToChatActive = 0;
   var turnorder = getTurnOrder();
 
   // detect --onlyto usage
   if ( onlyToString.length > 0 ) {
     onlyToActive = 1;	
     sendChat('','/w gm onlyto active.  Looking for string: ' + '<u>'+onlyToString+'</u>' );
+  } 
 
+  // detect --deal2chat usage
+  if ( dealToChat ) {
+    dealToChatActive = 1;	
   } 
 
   // build deck if needed (ok for --onlyto)
@@ -570,19 +582,19 @@ deal = function(id) {
   }
 
   // move hand (current turn order) to discard pile
-  // if --onlyto is in use do not disturb the other cards previous dealt for this round
-  if (hand.cards && !onlyToActive) { discards.combine(hand); }
+  // if --onlyto or --deal2chat is in use do not disturb the other cards previous dealt for this round
+  if (hand.cards && !onlyToActive && !dealToChat) { discards.combine(hand); }
 
   // shuffle if deck is empty (ok for --onlyto)
   if (deck.cardCount() === 0 ) {
-    sendChat('','/em Out of Action Cards - shuffling discards.' );
+    sendChat('','/em 1 Out of Action Cards - shuffling discards.' );
     deck.combine(discards);
-    shuffle();
+    shuffle();	  
   }
 
   // shuffle if there was a joker last round
-  // if --onlyto is in use do not shuffle on joker as the joker round is not over yet
-  if (jokerLastRound === 1 && !onlyToActive ) {
+  // if --onlyto or -- deal2chat is in use do not shuffle on joker as the joker round is not over yet
+  if (jokerLastRound === 1 && !onlyToActive && !dealToChat ) {
     sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
             +'Joker Last Round!'+'</div>Reshuffling discard pile...'+ divEnd );
     discards.combine(hand);
@@ -599,8 +611,8 @@ deal = function(id) {
     for (i = 0; i < turnorder.length; i+=1) {
     	
       // if --onlyto is active, we need to selectively execute this loop for only matching names
-      // otherwise execute the loop for every turn order entry
-      if ( (!onlyToActive) || (onlyToActive && initEdges[i].name.indexOf(onlyToString) !== -1 ) ) {
+      // otherwise execute the loop for every turn order entry -unless dea2chat then execute loop once
+      if ( (!onlyToActive) || (onlyToActive && initEdges[i].name.indexOf(onlyToString) !== -1 ) || dealToChat) {
 
         sendto = "/em "; // send messages to everyone by default
         if (initEdges[i].toktype === 'npc') { sendto = "/w gm ";}
@@ -609,24 +621,45 @@ deal = function(id) {
         // turn order and initEdges are in the same array order - counting on this!
         if (initEdges[i].edges === "SKIP" ) {
             turnorder[i].rank = "-1";
-            
         }
         
         // give tokens On Hold the highest rank
-        // ignore Hold state if onlyto is active, we will deal over it
+        // ignore Hold state if --onlyto is active, we will deal over it
         else if (initEdges[i].edges === "HOLD" && !onlyToActive ) {
             turnorder[i].rank = "55";            
         }
-        
+
+	// deal to chat
+	else if ( dealToChat ) {
+	    if( dealToChatActive ) {
+ 	       if (deck.cardCount() === 0 ) {
+                  sendChat('','/em 2 Out of Action Cards - shuffling discards.' );
+              	  deck.combine(discards);
+               	  shuffle();
+               }
+   	       // draw a card
+               nextcard =  deck.deal();
+               // send the card drawn to chat
+               sendChat('','/em Deal2Chat:  ' + nextcard.shortName );
+               // if a joker was dealt to chat, we need to shuffle
+	       if( nextcard.cardRank === 52 || nextcard.cardRank === 53 ){ 
+		   jokerInChat = 1;
+	       }
+            }
+	    // clear deal to chat to only deal 1 time
+            dealToChatActive = 0;
+	}
         else { 
             // sendChat('','/w '+who+" Deck Card Count: " + deck.cardCount() );
             if (deck.cardCount() === 0 ) {
-                sendChat('','/em Out of Action Cards - shuffling discards.' );
+                sendChat('','/em 3 Out of Action Cards - shuffling discards.' );
                 deck.combine(discards);
                 shuffle();
             }
             // draw a card
             nextcard =  deck.deal();
+	    // sendChat('',sendto + '<u>'+initEdges[i].shortname+'...</u> <b>Card: </b>'  + nextcard.shortName );
+
             // assign card short name to turn order priority
             turnorder[i].pr = nextcard.shortName;        
             turnorder[i].rank = nextcard.cardRank;        
@@ -642,16 +675,14 @@ deal = function(id) {
             // Level Headed
             if (initEdges[i].edges.indexOf('LH') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em Out of Action Cards - shuffling discards.' );
+                    sendChat('','/em 4 Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
 
                 // draw a card
                 nextcard =  deck.deal();
-
                 sendChat('',sendto + '<u>'+initEdges[i].shortname+'...</u> <b>LH: </b>' + turnorder[i].pr + ', ' + nextcard.shortName );
-
                 if ( nextcard.cardRank > turnorder[i].rank ) {
                     turnorder[i].pr = nextcard.shortName;        
                     turnorder[i].rank = nextcard.cardRank;        
@@ -662,7 +693,7 @@ deal = function(id) {
             // Improved Level Headed
             if (initEdges[i].edges.indexOf('ILH') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em Out of Action Cards - shuffling discards.' );
+                    sendChat('','/em 5 Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
@@ -676,12 +707,13 @@ deal = function(id) {
                 // store it in hand
                 hand.addCard(nextcard); 
             } // end Improved Level Headed
+		
             // Quick
             if (initEdges[i].edges.indexOf('Qui') !== -1 ) {
                 // loop until they have a 6 or better
                 while (turnorder[i].rank < 16 ) {
                     if (deck.cardCount() === 0 ) {
-                        sendChat('','/em Out of Action Cards - shuffling discards.' );
+                        sendChat('','/em 6 Out of Action Cards - shuffling discards.' );
                         deck.combine(discards);
                         shuffle();
                     }
@@ -694,17 +726,54 @@ deal = function(id) {
                     }
                     // store it in hand
                     hand.addCard(nextcard); 
+                } // end while
+            } // end quick
+	    // Tactician
+            if (initEdges[i].edges.indexOf('TT') !== -1 ) {
+                if (deck.cardCount() === 0 ) {
+                    sendChat('','/em 7 Out of Action Cards - shuffling discards.' );
+                    deck.combine(discards);
+                    shuffle();
                 }
-            }
-        }
-        // check for jokers
-        if(turnorder[i].rank === 52 || turnorder[i].rank === 53 ){ 
+   	       // draw a card
+               nextcard =  deck.deal();
+               // send the card drawn to chat
+	       sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 3px solid green;font-size: 100%;">' + '<u>'+initEdges[i].shortname+'...</u> Tactician Card!' +  '</div>'+ nextcard.shortName + divEnd );
+
+               // if a joker was dealt to chat, we need to shuffle
+	       if( nextcard.cardRank === 52 || nextcard.cardRank === 53 ){ 
+		   jokerInChat = 1;
+	       }
+            } // end Tactician
+	    // Master Tactician
+            if (initEdges[i].edges.indexOf('MTT') !== -1 ) {
+               if (deck.cardCount() === 0 ) {
+                    sendChat('','/em 8 Out of Action Cards - shuffling discards.' );
+                    deck.combine(discards);
+                    shuffle();
+               }
+   	       // draw a card
+               nextcard =  deck.deal();
+               // send the card drawn to chat
+	       sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 3px solid green;font-size: 100%;">' + '<u>'+initEdges[i].shortname+'...</u> Master Tactician Card!' +  '</div>'+ nextcard.shortName + divEnd );
+
+               // if a joker was dealt to chat, we need to shuffle
+	       if( nextcard.cardRank === 52 || nextcard.cardRank === 53 ){ 
+		   jokerInChat = 1;
+	       }
+            } // end Master Tactician
+	} // end else normal init deal
+
+	// check for jokers
+        if(turnorder[i].rank === 52 || turnorder[i].rank === 53 || jokerInChat ){ 
             jokerLastRound = 1; 
+	    // tactician and benny cards WILL trigger WCE
             if (initEdges[i].edges.indexOf('WCE') !== -1 ) {
                 // send message to chat regarding wild card edge activation  - should only send this to the "controlled by" list
                 sendChat('', sendto + divStart + '<div style="font-weight: bold; border-bottom: 1px solid black;font-size: 130%;">'
                     +initEdges[i].name+'</div>Your Joker activates your <b>Wild Card edge!</b>'+ divEnd );
             }
+            jokerInChat = 0;
             if (verboseMode ) {
               var  whoVM=getObj('player',id).get('_displayname').split(' ')[0];
               sendChat('','/w '+whoVM+" VERBOSE: Deal Function2: JokerLastRound set to 1." );
@@ -713,14 +782,15 @@ deal = function(id) {
       } // end if !onlyto || onlyto and matching name
     } // end for i ....
 
-    // clear onlyto match string
+    // clear onlyto match string and deal2chat
     onlyToString = '';
+    dealToChat = 0;
 
     // sort turnorder
     var sortedturnorder = _.sortBy(turnorder, 'rank').reverse();
     // push updated turn order into interface
     Campaign().set("turnorder", JSON.stringify(sortedturnorder));
-},  // end deal
+},  // end doTheDeal
 
 
 //-----------------------------------------------------------------------------
@@ -739,7 +809,7 @@ dealInitiative =function(id) {
      // pulls turn order tokens and fills initEdges object with names,ids,edges
     getInitiativeEdges(id);
     // log('-=> DealInit: back from [getInitiativeEdges] function <=- ');
-    deal(id);
+    doTheDeal(id);
 },
 
 
@@ -764,11 +834,13 @@ showHelp = function(id) {
         +'<p><b>Qui</b> = Quick</p>'
         +'<p><b>LH</b> = Level Headed</p>'
         +'<p><b>ILH</b> = Improved Level Headed</p>'
+        +'<p><b>TT</b> = Tactician (cards dealt to chat window)</p>'
+        +'<p><b>MTT</b> = Master Tactician (cards dealt to chat window)</p>'		 
         +'<p><b>WCE</b> = Any Joker Activated Wild Card Edge</p>'
 	+'</div>'
 	+'<b>Commands</b>'
 	+'<div style="padding-left:10px;">'
-		+'<b><span style="font-family: serif;">!deal-init '+'[ <i>--help</i> ] [<i>--reset</i> ] [<i>--show</i> ]' +'</span></b>'
+		+'<b><span style="font-family: serif;">!deal-init '+'[ <i>--help</i> ] [<i>--reset</i> ] [<i>--show</i> ] [<i>--onlyto --string</i> ] [<i>--deal2chat</i> ]' +'</span></b>'
 		+'<div style="padding-left: 10px;padding-right:20px">'
 			+'<ul>'
     			+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
@@ -785,6 +857,9 @@ showHelp = function(id) {
 				+'</li> '
     			+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
 					+'<b><span style="font-family: serif;">'+'--onlyto --string'+'</span></b> '+' deals cards only to names that contain "string". (case sensitive)'
+				+'</li> '
+		     	+'<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">'
+					+'<b><span style="font-family: serif;">'+'--deal2chat'+'</span></b> '+' deals one card to chat window (use when player spends a benny to redraw)'
 				+'</li> '
     		+'</ul>'
     	+'</div>'
@@ -804,6 +879,7 @@ showHelp = function(id) {
 // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
 // --show - show the cards in turnorder, discard, draw piles (showCards)
 // --onlyto --string- deals cards only to names that contain string (case sensitive)
+// --deal2chat - deal 1 card to chat
 handleInput = function(msg_orig) {
     
     var msg = _.clone(msg_orig);
@@ -850,11 +926,18 @@ handleInput = function(msg_orig) {
         return;
 	 }
 
-    // deal only to tokes where name contains string
+    // deal only to tokens where name contains string
     if (args[0] === "onlyto") {
         onlyToString = args[1];
         // do not return - need to flow thru to normal dealing process;
         // log('-=> DealInit: Using [onlyto] option.  Match String is'+ onlyToString  +'<=- ');
+	 }
+
+    // deal one card to chat (spending bennies or tactician edges )
+    if (args[0] === "deal2chat") {
+        dealToChat = 1;
+        // do not return - need to flow thru to normal dealing process;
+        // log('-=> DealInit: Using [deal2chat] option. <=- ');
 	 }
 
 
