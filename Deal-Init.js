@@ -21,7 +21,7 @@
 // 0.9 added --onlyTo as means to deal to specified cards from command line. Ignores Hold state  
 //     Use if adding a token after dealing or to take someone off hold after dealing.
 // 1.0 addded support for --deal2chat and Tactician/Master Tactician Edges from SWADE
-
+// 1.1 added support for Hesitant Hindrance (HH) from SWADE  (thanks to Jeff B!)
  
 // used by jslint tool:  http://www.jslint.com/
 /* jslint
@@ -43,8 +43,8 @@ var DealInit = DealInit || (function() {
     'use strict';
 
 
-    var version = '1.0',
-        lastUpdate = '[Last Update: Dec 22, 2018, 5pm Pacific]',
+    var version = '1.1',
+        lastUpdate = '[Last Update: Dec 27, 2018, 5pm Pacific]',
         jokerLastRound = 0,
 	jokerInChat = 0,
         onlyToString = '',
@@ -587,7 +587,7 @@ doTheDeal = function(id) {
 
   // shuffle if deck is empty (ok for --onlyto)
   if (deck.cardCount() === 0 ) {
-    sendChat('','/em 1 Out of Action Cards - shuffling discards.' );
+    sendChat('','/em Out of Action Cards - shuffling discards.' );
     deck.combine(discards);
     shuffle();	  
   }
@@ -633,7 +633,7 @@ doTheDeal = function(id) {
 	else if ( dealToChat ) {
 	    if( dealToChatActive ) {
  	       if (deck.cardCount() === 0 ) {
-                  sendChat('','/em 2 Out of Action Cards - shuffling discards.' );
+                  sendChat('','/em Out of Action Cards - shuffling discards.' );
               	  deck.combine(discards);
                	  shuffle();
                }
@@ -652,7 +652,7 @@ doTheDeal = function(id) {
         else { 
             // sendChat('','/w '+who+" Deck Card Count: " + deck.cardCount() );
             if (deck.cardCount() === 0 ) {
-                sendChat('','/em 3 Out of Action Cards - shuffling discards.' );
+                sendChat('','/em Out of Action Cards - shuffling discards.' );
                 deck.combine(discards);
                 shuffle();
             }
@@ -675,7 +675,7 @@ doTheDeal = function(id) {
             // Level Headed
             if (initEdges[i].edges.indexOf('LH') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em 4 Out of Action Cards - shuffling discards.' );
+                    sendChat('','/em Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
@@ -693,7 +693,7 @@ doTheDeal = function(id) {
             // Improved Level Headed
             if (initEdges[i].edges.indexOf('ILH') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em 5 Out of Action Cards - shuffling discards.' );
+                    sendChat('','/em Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
@@ -713,7 +713,7 @@ doTheDeal = function(id) {
                 // loop until they have a 6 or better
                 while (turnorder[i].rank < 16 ) {
                     if (deck.cardCount() === 0 ) {
-                        sendChat('','/em 6 Out of Action Cards - shuffling discards.' );
+                        sendChat('','/em Out of Action Cards - shuffling discards.' );
                         deck.combine(discards);
                         shuffle();
                     }
@@ -731,7 +731,7 @@ doTheDeal = function(id) {
 	    // Tactician
             if (initEdges[i].edges.indexOf('TT') !== -1 ) {
                 if (deck.cardCount() === 0 ) {
-                    sendChat('','/em 7 Out of Action Cards - shuffling discards.' );
+                    sendChat('','/em Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                 }
@@ -748,7 +748,7 @@ doTheDeal = function(id) {
 	    // Master Tactician
             if (initEdges[i].edges.indexOf('MTT') !== -1 ) {
                if (deck.cardCount() === 0 ) {
-                    sendChat('','/em 8 Out of Action Cards - shuffling discards.' );
+                    sendChat('','/em Out of Action Cards - shuffling discards.' );
                     deck.combine(discards);
                     shuffle();
                }
@@ -762,6 +762,34 @@ doTheDeal = function(id) {
 		   jokerInChat = 1;
 	       }
             } // end Master Tactician
+	
+	    // Hesitant (Minor)
+            if (initEdges[i].edges.indexOf('HH') !== -1 ) {
+               if (deck.cardCount() === 0 ) {
+                  sendChat('','/em Out of Action Cards - shuffling discards.' );
+                  deck.combine(discards);
+                  shuffle();
+               }
+
+               // draw a card
+               nextcard =  deck.deal();
+               sendChat('',sendto + '<u>'+initEdges[i].shortname+'...</u> <b>HH: </b>' + turnorder[i].pr + ', ' + nextcard.shortName );
+
+	       // Hesitant get's to keep a joker
+               if ( nextcard.cardRank >= 52 ) {
+                  turnorder[i].pr = nextcard.shortName;
+                  turnorder[i].rank = nextcard.cardRank;
+               }
+               // Otherwise Hesitant takes the worst card
+               else if ( nextcard.cardRank < turnorder[i].rank ) {
+                  turnorder[i].pr = nextcard.shortName;
+                  turnorder[i].rank = nextcard.cardRank;
+               }
+
+	       // store card in hand
+               hand.addCard(nextcard);
+            } // end Hesitant (Minor)
+		
 	} // end else normal init deal
 
 	// check for jokers
@@ -829,13 +857,14 @@ showHelp = function(id) {
 		+'<p>DealInit supports Savage Worlds style card based Inititive by dealing cards to Turn Order and sorting the order by suit. </p>'
         +'<p>It does not, however, utilize the Roll20 deck system.  Instead it manages an array of cards that are reshuffled when the deck runs out or a joker is drawn.</p>'
         +'<p>It also checks Token Attributes for Any SW Inititative Edges and handles them appropriately.</p>'
-        +'<p>Initiative Edges must be stored in a comma separated list in an Attribute named InitEdges. (e.g.  Qu,LH)</p'
+        +'<p>Initiative Edges must be stored in a comma separated list in an Attribute named InitEdges. (e.g.  Qui,LH)</p>'
         +'<p>The Edge shorthand is as follows:</p>'
         +'<p><b>Qui</b> = Quick</p>'
         +'<p><b>LH</b> = Level Headed</p>'
         +'<p><b>ILH</b> = Improved Level Headed</p>'
         +'<p><b>TT</b> = Tactician (cards dealt to chat window)</p>'
         +'<p><b>MTT</b> = Master Tactician (cards dealt to chat window)</p>'		 
+        +'<p><b>HH</b> = Hesitant Hindrance</p>'		 
         +'<p><b>WCE</b> = Any Joker Activated Wild Card Edge</p>'
 	+'</div>'
 	+'<b>Commands</b>'
