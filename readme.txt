@@ -12,7 +12,8 @@ The Edge shorthand is as follows: (spelling and case count!)
   LH  = Level Headed
   ILH = Improved Level Headed
   TT  = Tactician (cards dealt to chat)
-  MTT - Master Tactician (cards dealt to chat)
+  MTT = Master Tactician (cards dealt to chat)
+  HH  = Hesitant Hindrance 
   WCE = Any Joker Activated Wild Card Edge (announced in turn order)
 
 Going on Hold is accomplished by the GM editing the affected token's card to be "H" or "h."  As long as the card is an H/h, DealInit will not deal a card to that token and will put it at the top of the order on a new round.  The GM must set the card to an non-H/h value in order for DealInit to start dealing to that token again.
