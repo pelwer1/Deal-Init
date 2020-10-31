@@ -1,3 +1,4 @@
+```
 Deal-Init
 Roll20 API Script to Deal Initiative for Savage Worlds Games
 
@@ -42,4 +43,4 @@ I personally use 4 macros to call the script that look like this:
 "Benny a New Card"
 !deal-init --deal2chat
 
-
+```
