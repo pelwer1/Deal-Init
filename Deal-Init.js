@@ -1,15 +1,10 @@
 // Github:   https://github.com/pelwer1/Deal-Init
 // By:       Pat Elwer
 // Contact:  https://app.roll20.net/users/8948/pat
-
-// ask Aaron
-// o How to avoid getAttrByName log errors - not possible right now, in the Roll20 Dev backlog.
+// Help:     !deal-init --help
 
 // on deck
-// o Configs to show/hide chat init edge output
-// o Cmd line arg to toggle On Hold for the token at the top of the order
-// o Stop setting card for round counters to -1 and move them to the bottom of the order in the sort 
-// once and only once in deal()
+// o Once and only once in deal()
 
 //Rev History
 // 0.4 minimize chat output
@@ -22,6 +17,7 @@
 //     Use if adding a token after dealing or to take someone off hold after dealing.
 // 1.0 addded support for --deal2chat and Tactician/Master Tactician Edges from SWADE
 // 1.1 added support for Hesitant Hindrance (HH) from SWADE  (thanks to Jeff B!)
+// 1.2 added support for 1 click install
  
 // used by jslint tool:  http://www.jslint.com/
 /* jslint
@@ -43,8 +39,8 @@ var DealInit = DealInit || (function() {
     'use strict';
 
 
-    var version = '1.1',
-        lastUpdate = '[Last Update: Dec 27, 2018, 5pm Pacific]',
+    var version = '1.2',
+        lastUpdate = '[Last Update: Oct 31, 2020, 5pm Pacific]',
         jokerLastRound = 0,
 	jokerInChat = 0,
         onlyToString = '',
