@@ -1,15 +1,17 @@
 {
-"name": "Elevation",
-"script":"Elevation.js",	
-"version": "0.1.0",
-"description": "Defines different elevation levels to allow showing/hiding of different map sections with DL paths for different elevations",
-"authors": "Lucian Holland",
-"roll20userid": "791452",
+"name": "Deal-Init",
+"script":"Deal-Init.js",	
+"version": "1.2",
+"previousversions": [],
+"description": "Handles Savage Worlds card-based Inititive by dealing cards to Turn Order, automatically handling Jokers and Initiative Edges and sorting Turn Order by suit.",
+"authors": "Pat Elwer",
+"roll20userid": "8948",
+"useroptions": [],
 "dependencies": [],
 "modifies": {
-	"state.Elevation": "read,write",
-	"graphic.*": "read,write",
-	"path.*": "read,write"
+	"character.": "read",
+	"token.*": "read",
+	"turnorder.*": "read,write"
 	},
 "conflicts":[]
 }
