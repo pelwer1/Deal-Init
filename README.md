@@ -4,7 +4,7 @@ Roll20 API Script to Deal Initiative for Savage Worlds Games
 
 DealInit supports Savage Worlds style card based inititive by dealing cards to the Turn Order and sorting the order by suit.  
 (Note: If you are using the amazing VTTES to enhance your Roll20 experience, you must disable "Automatically Sort Initiative" 
- in the VTTES config settings as it does nto handle card sorting correctly.)
+ in the VTTES config settings as it does not handle card sorting correctly.)
 
 DealInit does not utilize the Roll20 deck system. Instead it manages an internal array of cards that are reshuffled when 
 the deck runs out or a joker is drawn.
