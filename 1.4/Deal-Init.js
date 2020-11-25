@@ -19,6 +19,7 @@
 // 1.1 added support for Hesitant Hindrance (HH) from SWADE  (thanks to Jeff B!)
 // 1.2 added support for 1 click install
 // 1.3 added global option for a 4 joker deck
+// 1.4 ripped out global config code and made 4 joker deck a new command line option: 4jreset
 
 // used by jslint tool:  http://www.jslint.com/
 /* jslint
@@ -56,15 +57,11 @@
 var DealInit = DealInit || (function() {
    'use strict';
 
-   // Get the configurations from the 1-click useroptions.
-   var useroptions = (globalconfig && (globalconfig.DealInit || globalconfig.dealinit)) || { 'use4Jokers': 0};
-
-      
-   var version = '1.3',
-      lastUpdate = '[Last Update: Nov 15, 2020, 5pm Pacific]',
+   var version = '1.4',
+      lastUpdate = '[Last Update: Nov 25, 2020, 5pm Pacific]',
       jokerLastRound = 0,
       jokerInChat = 0,
-      fourJokers = useroptions.use4Jokers,
+      fourJokers = 0,
       onlyToString = '',
       dealToChat = 0,
       verboseMode = 0,
@@ -1012,6 +1009,9 @@ var DealInit = DealInit || (function() {
             '<b><span style="font-family: serif;">' + '--reset' + '</span></b> ' + ' Reset the deck and shuffle.  Use at the start of a new scene or encounter.' +
             '</li> ' +
             '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
+            '<b><span style="font-family: serif;">' + '--4jreset' + '</span></b> ' + ' Reset the deck with 4 Jokers and shuffle.  Use at the start of a new scene or encounter.' +
+            '</li> ' +
+            '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
             '<b><span style="font-family: serif;">' + '--show' + '</span></b> ' + ' Show the current contents of the deck, discard pile, and turn order.' +
             '</li> ' +
             '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
@@ -1036,6 +1036,7 @@ var DealInit = DealInit || (function() {
       // --help - show help (showHelp)
       // (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
       // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
+      // --4jreset - creates and shuffles the deck with 4 jokers, use at the start of combat/scene (init)
       // --show - show the cards in turnorder, discard, draw piles (showCards)
       // --onlyto --string- deals cards only to names that contain string (case sensitive)
       // --deal2chat - deal 1 card to chat
@@ -1078,6 +1079,14 @@ var DealInit = DealInit || (function() {
             return;
          }
 
+	 // reset the deck and shuffle 
+         if (args[0] === "4jreset") {
+            // log('-=> DealInit: Calling [createDeck] function with 4Jokers <=- ');
+	    fourJokers = 1;
+            createDeck(msg.playerid);
+            return;
+         }
+	      
          // print out the contents of turn order, discard, and draw piles
          if (args[0] === "show") {
             // log('-=> DealInit: Calling [display] function <=- ');
