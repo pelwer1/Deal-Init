@@ -56,11 +56,15 @@
 var DealInit = DealInit || (function() {
    'use strict';
 
+   // Get the configurations from the 1-click useroptions.
+   var useroptions = (globalconfig && (globalconfig.DealInit || globalconfig.dealinit)) || { 'use4Jokers': 0};
+
+      
    var version = '1.3',
       lastUpdate = '[Last Update: Nov 15, 2020, 5pm Pacific]',
       jokerLastRound = 0,
       jokerInChat = 0,
-      fourJokers = 0,
+      fourJokers = useroptions.use4Jokers,
       onlyToString = '',
       dealToChat = 0,
       verboseMode = 0,
