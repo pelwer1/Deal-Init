@@ -79,7 +79,7 @@
 var DealInit = DealInit || (function() {
   'use strict';
 
-  var version = '1.4',
+  var version = '1.5',
     lastUpdate = '[Last Update: Nov 25, 2020, 5pm Pacific]',
     jokerLastRound = 0,
     jokerInChat = 0,
