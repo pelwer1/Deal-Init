@@ -909,8 +909,13 @@ var DealInit = DealInit || (function() {
               nextcard = deck.deal();
               sendChat('', sendto + '<u>' + initEdges[i].shortname + '...</u> <b>HH: </b>' + turnorder[i].pr + ', ' + nextcard.shortName);
 
-              // Hesitant gets to keep a joker
-              if (nextcard.cardRank > 51) {
+              // Hesitant gets two cards and is able to keep a joker, but takes the worst card otherwise
+              // if first card is a joker and next card is not a better joker, keep first card 
+              if ( (turnorder[i].rank > 51) && (nextcard.cardRank < turnorder[i].rank) ) {
+                // keep the first card (already stored in turnorder[i])
+              }
+              // if second card is a joker use the second card  
+              else if (nextcard.cardRank > 51) {
                 turnorder[i].pr = nextcard.shortName;
                 turnorder[i].rank = nextcard.cardRank;
               }
