@@ -1,4 +1,4 @@
-1. Fork roll20 api scripts repo
+1. Fork roll20 api scripts repo:  https://github.com/Roll20/roll20-api-scripts
 1. Go to Deal-Init dir in the forked repo
 1. Poke Add New file and type x.y/Deal-Init.js where x.y is new revision name
 1. Paste in new code from my Deal-Init repo
