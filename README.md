@@ -75,7 +75,7 @@ This type of problem occurs when the TurnOrder is not "flushed" between sessions
 
 My workflow, when I use the script is like this:
 
-1. New Roll20 session or New Page => Flush Turn Order
+1. New Roll20 session or New Page => Clear Turn Order:  !deal-init --clearTurnOrder
 1. New Encounter: !deal-init --reset
 1. New Round: !deal-init
 1. Someone Spends a Benny to Draw a New Card: !deal-init --deal2chat  (then I just manually move them around in the TurnOrder)
