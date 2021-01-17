@@ -994,7 +994,7 @@ var DealInit = DealInit || (function() {
         'DealInit v' + version +
         '</div>' +
         '<div style="padding-left:10px;margin-bottom:3px;">' +
-        '<p>See full ReadMe details here: https://github.com/pelwer1/Deal-Init </p>
+        '<p>See full ReadMe details here: https://github.com/pelwer1/Deal-Init </p>' +
         '<p>DealInit supports Savage Worlds style card based Inititive by dealing cards to Turn Order and sorting the order by suit. </p>' +
         '<p>It does not, however, utilize the Roll20 deck system.  Instead it manages an array of cards that are reshuffled when the deck runs out or a joker is drawn.</p>' +
         '<p>It also checks Token Attributes for Any SW Inititative Edges and handles them appropriately.</p>' +
