@@ -1039,6 +1039,9 @@ var DealInit = DealInit || (function() {
         '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
         '<b><span style="font-family: serif;">' + '--deal2chat' + '</span></b> ' + ' deals one card to chat window (use when player spends a benny to redraw)' +
         '</li> ' +
+        '<li style="border-top: 1px solid #ccc;border-bottom: 1px solid #ccc;">' +
+        '<b><span style="font-family: serif;">' + '--quiet' + '</span></b> ' + ' minimize chat output to GM' +
+        '</li> ' +
         '</ul>' +
         '</div>' +
         '</div>' +
