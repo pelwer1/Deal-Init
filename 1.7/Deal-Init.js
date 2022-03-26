@@ -13,7 +13,7 @@
 //     stopped setting init value of Round counters to -1 - thanks GV!
 // 0.7 Fixed bug where hold was being interpreted as a joker - thanks Maetco!
 // 0.8 Added verbose mode to track Joker handling
-// 0.9 added --onlyTo as means to deal to specified cards from command line. Ignores Hold state  
+// 0.9 added --onlyTo as means to deal to specified cards from command line. Ignores Hold state
 //     Use if adding a token after dealing or to take someone off hold after dealing.
 // 1.0 addded support for --deal2chat and Tactician/Master Tactician Edges from SWADE
 // 1.1 added support for Hesitant Hindrance (HH) from SWADE  (thanks to Jeff B!)
@@ -69,7 +69,7 @@
   ILH = Improved Level Headed
   TT  = Tactician (cards dealt to chat)
   MTT = Master Tactician (cards dealt to chat)
-  HH  = Hesitant Hindrance 
+  HH  = Hesitant Hindrance
   WCE = Any Joker Activated Wild Card Edge (announced in turn order)
 
 - On Hold
@@ -88,6 +88,7 @@ var DealInit = DealInit || (function() {
     fourJokers = 0,
     onlyToString = '',
     dealToChat = 0,
+    quietMode = 0,
     verboseMode = 0,
     chatOutputLength = 4,
     deck = {},
@@ -104,8 +105,8 @@ var DealInit = DealInit || (function() {
     //-----------------------------------------------------------------------------
     Card = function(cardRank, shortName, longName) {
 
-      this.cardRank = cardRank; //0-55 for init sorting, higher # = higher initiative 
-      this.shortName = shortName; // short name for display in turn order e.g. JH 
+      this.cardRank = cardRank; //0-55 for init sorting, higher # = higher initiative
+      this.shortName = shortName; // short name for display in turn order e.g. JH
       this.longName = longName; // long name for human readable messages e.g Jack of Hearts
 
     },
@@ -205,7 +206,7 @@ var DealInit = DealInit || (function() {
     },
 
     //-----------------------------------------------------------------------------
-    // stackShuffle(n): Shuffles a stack of cards 'n' times. 
+    // stackShuffle(n): Shuffles a stack of cards 'n' times.
     //-----------------------------------------------------------------------------
 
     stackShuffle = function(n) {
@@ -357,8 +358,8 @@ var DealInit = DealInit || (function() {
     //
     // Card = function(cardRank, shortName,longName) {
     //
-    //  this.cardRank = cardRank;   //0-53 for init sorting, higher # = higher initiative 
-    //  this.shortName = shortName; // short name for display in turn order e.g. JH 
+    //  this.cardRank = cardRank;   //0-53 for init sorting, higher # = higher initiative
+    //  this.shortName = shortName; // short name for display in turn order e.g. JH
     //  this.longName = longName;   // long name for human readable messages e.g Jack of Hearts
 
     //-----------------------------------------------------------------------------
@@ -443,8 +444,8 @@ var DealInit = DealInit || (function() {
     //-----------------------------------------------------------------------------
     // getTurnOrder(): Read Turn Order and load into a hash
     //-----------------------------------------------------------------------------
-    // To work with the turn order, you will want to use JSON.parse() to get an object representing the 
-    // current turn order state (NOTE: Check to make sure it's not an empty string "" first...if it is, 
+    // To work with the turn order, you will want to use JSON.parse() to get an object representing the
+    // current turn order state (NOTE: Check to make sure it's not an empty string "" first...if it is,
     // initialize it yourself with an empty array).
     getTurnOrder = function() {
       var to = Campaign().get("turnorder");
@@ -455,9 +456,9 @@ var DealInit = DealInit || (function() {
     //-----------------------------------------------------------------------------
     // getInitiativeEdges(): Read Init Edges from characters (if any) and store in hash
     //-----------------------------------------------------------------------------
-    // To modify the turn order, edit the current turn order object and then use 
-    // JSON.stringify() to change the attribute on the Campaign. Note that the 
-    // ordering for the turn order in the list is the same as the order of the array, 
+    // To modify the turn order, edit the current turn order object and then use
+    // JSON.stringify() to change the attribute on the Campaign. Note that the
+    // ordering for the turn order in the list is the same as the order of the array,
     // so for example push() adds an item onto the end of the list, unshift() adds to the beginning, etc.
     //
     // initEdges :
@@ -565,7 +566,7 @@ var DealInit = DealInit || (function() {
 
           // sendChat('','Player type : '+tokentype+ '<br>Name: '+ initEdges[i].name);
         }
-        // turn order item is a "token that represents a character", look for init edges 
+        // turn order item is a "token that represents a character", look for init edges
         else if (getObj("character", getObj("graphic", toid).get("represents"))) {
 
           // from the graphic id, get the token object
@@ -589,8 +590,8 @@ var DealInit = DealInit || (function() {
             // the get "current" value of InitEdges, if any
             if (!getAttrByName(char_obj.id, "InitEdges")) {
               char_edges = "0";
-              if (!dealToChat) {
-                sendChat('', '/w gm No Init Edges for: ' + char_name);  // --quiet
+              if (!dealToChat && !quietMode) {
+                sendChat('', '/w gm No Init Edges for: ' + char_name); 
               }
             } else {
               char_edges = getAttrByName(char_obj.id, "InitEdges");
@@ -604,7 +605,7 @@ var DealInit = DealInit || (function() {
               char_edges = "HOLD";
             }
           }
-          // for --onlyto to work intuitively we must use token names in the initedges array.  
+          // for --onlyto to work intuitively we must use token names in the initedges array.
           // Otherwise users are trying to match character names and not token names - token names are displayed in the turnorder
           // initEdges[i] = { id : toid, edges : char_edges, name: char_name, toktype: tokentype, shortname: char_name.substr(0, chatOutputLength)  };
           if (char_name.substr(0, chatOutputLength)) {
@@ -766,11 +767,11 @@ var DealInit = DealInit || (function() {
             // store it in hand
             hand.addCard(nextcard);
             // check for extra card edges - below from PEG forums
-            // As stated under Quick, "Characters with both the Level Headed and Quick Edges draw their additional card and 
-            // take the best as usual. If that card is a Five or less, the Quick Edge may be used to draw a replacement 
-            // until it’s Six or higher." 
-            // Meaning they draw 2 cards for Level Headed (or 3 for the Improved version), and then take the higher of 
-            // those cards. If that card is still a 5 or less, then they can draw a single new card until they get one of 6 or better. 
+            // As stated under Quick, "Characters with both the Level Headed and Quick Edges draw their additional card and
+            // take the best as usual. If that card is a Five or less, the Quick Edge may be used to draw a replacement
+            // until it’s Six or higher."
+            // Meaning they draw 2 cards for Level Headed (or 3 for the Improved version), and then take the higher of
+            // those cards. If that card is still a 5 or less, then they can draw a single new card until they get one of 6 or better.
             //
             // Level Headed
             if (initEdges[i].edges.indexOf('LH') !== -1) {
@@ -890,7 +891,7 @@ var DealInit = DealInit || (function() {
               sendChat('', '/em ' + divStart + '<div style="font-weight: bold; border-bottom: 3px solid green;font-size: 100%;">' + '<u>' + initEdges[i].shortname + '...</u> Master Tactician Card!' + '</div>' + nextcard.shortName + divEnd);
 
               // if a joker was dealt to chat, we need to shuffle
-              //	       if( nextcard.cardRank === 52 || nextcard.cardRank === 53 ){ 
+              //	       if( nextcard.cardRank === 52 || nextcard.cardRank === 53 ){
               if (nextcard.cardRank > 51 && nextcard.cardRank < 60) {
                 jokerInChat = 1;
               }
@@ -912,11 +913,11 @@ var DealInit = DealInit || (function() {
               sendChat('', sendto + '<u>' + initEdges[i].shortname + '...</u> <b>HH: </b>' + turnorder[i].pr + ', ' + nextcard.shortName);
 
               // Hesitant gets two cards and is able to keep a joker, but takes the worst card otherwise
-              // if first card is a joker and next card is not a better joker, keep first card 
+              // if first card is a joker and next card is not a better joker, keep first card
               if ( (turnorder[i].rank > 51) && (nextcard.cardRank < turnorder[i].rank) ) {
                 // keep the first card (already stored in turnorder[i])
               }
-              // if second card is a joker use the second card  
+              // if second card is a joker use the second card
               else if (nextcard.cardRank > 51) {
                 turnorder[i].pr = nextcard.shortName;
                 turnorder[i].rank = nextcard.cardRank;
@@ -968,7 +969,7 @@ var DealInit = DealInit || (function() {
     //-----------------------------------------------------------------------------
     // every time we deal, we need to
     // o pull turn order tokens
-    // o get names, ids, and init edges  
+    // o get names, ids, and init edges
     // o deal cards to hand, accounting for init edges and end of deck and jokers
     // o no cards to custom items in init - set to -1 init to put them at the bottom
     // o on recall and shuffle, don't destroy hand unless new scene/combat (createDeck)
@@ -1049,10 +1050,10 @@ var DealInit = DealInit || (function() {
     // handleInput(): Parse command line args
     //-----------------------------------------------------------------------------
     // possible args
-    // !deal-init 
+    // !deal-init
     // --help - show help (showHelp)
     // (no args) - deal cards to items in turn order and sort turn order by suit (dealInitiative)
-    // --clearTurnOrder - blanks the turn order, useful after a page change  
+    // --clearTurnOrder - blanks the turn order, useful after a page change
     // --reset - creates and shuffles the deck, use at the start of combat/scene (init)
     // --4jreset - creates and shuffles the deck with 4 jokers, use at the start of combat/scene (init)
     // --show - show the cards in turnorder, discard, draw piles (showCards)
@@ -1089,7 +1090,7 @@ var DealInit = DealInit || (function() {
         Campaign().set('turnorder','[]');
         return;
       }
-      // reset the deck with 2 Jokers and shuffle 
+      // reset the deck with 2 Jokers and shuffle
       if (args[0] === "reset") {
         // log('-=> DealInit: Calling [createDeck] function with 2 Jokers <=- ');
         fourJokers = 0;
@@ -1097,7 +1098,7 @@ var DealInit = DealInit || (function() {
         return;
       }
 
-      // reset the deck with 4 Jokers and shuffle 
+      // reset the deck with 4 Jokers and shuffle
       if (args[0] === "4jreset") {
         // log('-=> DealInit: Calling [createDeck] function with 4 Jokers <=- ');
         fourJokers = 1;
@@ -1117,6 +1118,13 @@ var DealInit = DealInit || (function() {
         onlyToString = args[1];
         // do not return - need to flow thru to normal dealing process;
         // log('-=> DealInit: Using [onlyto] option.  Match String is'+ onlyToString  +'<=- ');
+      }
+      
+      // minimize chat messages
+      if (args[0] === "quiet") {
+        quietMode = 1;
+        // do not return - need to flow thru to normal dealing process;
+        // log('-=> DealInit: Using [quiet] option. <=- ');
       }
 
       // deal one card to chat (spending bennies or tactician edges )
