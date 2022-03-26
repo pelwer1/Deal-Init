@@ -5,7 +5,7 @@
 ```
 DealInit supports Savage Worlds style card based inititive by dealing cards to the Turn Order and 
 sorting the order by suit.  
-(Note: If you are using the amazing VTTES to enhance your Roll20 experience, you must disable 
+(Note: If you are using VTTES to enhance your Roll20 experience, you must disable 
 "Automatically Sort Initiative" in the VTTES config settings for Deal-Init to work properly.)
 
 DealInit does not utilize the Roll20 deck system. Instead it manages an internal array of cards 
