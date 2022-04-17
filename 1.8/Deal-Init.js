@@ -985,8 +985,8 @@ var DealInit = DealInit || (function() {
               sendChat('', '/w ' + whoVM + " VERBOSE: Deal Function2: JokerLastRound set to 1.");
             }
           } // end if joker
-          // check for complications  (clubs)
-          if (turnorder[i].pr.indexOf("clubs") !== -1 && showComps ) {
+          // check for complications  (clubs) [ if not a custom item (-1) and not on Hold (60) ]
+          if (turnorder[i].rank !== "-1" && turnorder[i].rank !== "60" && turnorder[i].pr.indexOf("clubs") !== -1 && showComps ) {
             sendChat('', '/em Complication for ['+initEdges[i].shortname+'] if this is a Dramatic Task or Chase!');
           }
                     
